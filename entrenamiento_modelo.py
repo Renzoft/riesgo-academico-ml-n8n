@@ -31,6 +31,9 @@ def entrenar_modelo():
     learning_rate = 0.001
 
     # 3. Iniciar experimento en MLflow
+    # Usamos SQLite como backend para evitar errores de rutas con espacios en Windows
+    # y cumplir con la arquitectura definida en su proyecto (Uso de SQLite).
+    mlflow.set_tracking_uri("sqlite:///mlflow.db")
     mlflow.set_experiment("Sistema_Riesgo_Academico_MLP")
 
     with mlflow.start_run():

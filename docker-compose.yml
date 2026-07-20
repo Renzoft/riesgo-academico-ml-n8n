@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  # Servicio 1: Nuestra API Inteligente con la Red Neuronal
+  api_inteligente:
+    build: .
+    container_name: api_inteligente
+    ports:
+      - "8000:8000"
+    volumes:
+      # Montamos la carpeta local models/ para que el contenedor lea siempre la última versión de la red neuronal
+      - ./models:/app/models
+    restart: always
+
+  # Servicio 2: n8n para la orquestación y automatización
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n_orquestador
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - WEBHOOK_URL=http://localhost:5678/
+      - GENERIC_TIMEZONE=America/Lima
+    volumes:
+      - n8n_data:/home/node/.n8n
+    restart: always
+
+volumes:
+  n8n_data:
