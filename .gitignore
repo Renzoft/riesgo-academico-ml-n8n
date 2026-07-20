@@ -1,0 +1,22 @@
+# Entornos virtuales
+.venv/
+env/
+venv/
+
+# Archivos de datos pesados / temporales
+dataset.csv
+*.csv
+
+# Python cache
+__pycache__/
+*.pyc
+
+# MLflow datos de experimentos y modelos generados
+mlruns/
+mlartifacts/
+*.keras
+*.h5
+*.pkl
+
+# Archivos de entorno y credenciales
+.env
