@@ -1,33 +1,48 @@
-version: '3.8'
-
 services:
-  # Servicio 1: Nuestra API Inteligente con la Red Neuronal
   api_inteligente:
     build: .
     container_name: api_inteligente
     ports:
       - "8000:8000"
+    environment:
+      DATABASE_PATH: /app/app_data/riesgo_academico.db
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      SENDER_EMAIL: alertas@universidad.local
     volumes:
-      # Montamos la carpeta local models/ para que el contenedor lea siempre la última versión de la red neuronal
-      - ./models:/app/models
-    restart: always
+      - ./models:/app/models:ro
+      - ./app_data:/app/app_data
+    depends_on:
+      - mailhog
+    restart: unless-stopped
 
-  # Servicio 2: n8n para la orquestación y automatización
   n8n:
     image: n8nio/n8n:latest
     container_name: n8n_orquestador
     ports:
       - "5678:5678"
     environment:
-      - N8N_HOST=localhost
-      - N8N_PORT=5678
-      - N8N_PROTOCOL=http
-      - NODE_ENV=production
-      - WEBHOOK_URL=http://localhost:5678/
-      - GENERIC_TIMEZONE=America/Lima
+      N8N_HOST: localhost
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+      WEBHOOK_URL: http://localhost:5678/
+      GENERIC_TIMEZONE: America/Lima
+      TZ: America/Lima
+      N8N_SECURE_COOKIE: "false"
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
     volumes:
       - n8n_data:/home/node/.n8n
-    restart: always
+    depends_on:
+      - api_inteligente
+    restart: unless-stopped
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: mailhog_local
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    restart: unless-stopped
 
 volumes:
   n8n_data:

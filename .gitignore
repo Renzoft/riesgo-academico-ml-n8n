@@ -3,20 +3,27 @@
 env/
 venv/
 
-# Archivos de datos pesados / temporales
+# Datos locales
 dataset.csv
 *.csv
 
-# Python cache
+# Python
 __pycache__/
 *.pyc
+.pytest_cache/
 
-# MLflow datos de experimentos y modelos generados
+# Modelos y bases locales
+models/*.keras
+models/*.h5
+models/*.pkl
+mlflow.db
 mlruns/
 mlartifacts/
-*.keras
-*.h5
-*.pkl
+mlflow_data/
+n8n_data/
+app_data/
 
-# Archivos de entorno y credenciales
+# Credenciales y editores
 .env
+.vscode/
+.idea/

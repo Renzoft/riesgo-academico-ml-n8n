@@ -1,78 +1,150 @@
+from pathlib import Path
+
 import pandas as pd
-import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, LabelEncoder
-import os
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 
-def preparar_datos(ruta_dataset):
+
+RANDOM_STATE = 42
+TARGET_COLUMN = "Target"
+
+
+def preparar_datos(ruta_dataset: str):
     """
-    Función para cargar, limpiar y preparar el dataset para la red neuronal.
+    Carga el dataset, valida sus columnas y crea conjuntos separados de
+    entrenamiento (70 %), validación (15 %) y prueba final (15 %).
+
+    El escalador se ajusta únicamente con los datos de entrenamiento para
+    evitar fuga de información.
     """
-    print(f"Cargando dataset desde: {ruta_dataset}")
-    if not os.path.exists(ruta_dataset):
-        raise FileNotFoundError(f"No se encontró el archivo en {ruta_dataset}. Por favor, descárgalo de Kaggle y colócalo aquí.")
-        
-    df = pd.read_csv(ruta_dataset)
-    
-    # 1. Exploración inicial
+    dataset_path = Path(ruta_dataset)
+
+    print(f"Cargando dataset desde: {dataset_path}")
+
+    if not dataset_path.exists():
+        raise FileNotFoundError(
+            f"No se encontró el archivo {dataset_path}. "
+            "Coloca dataset.csv en la raíz del proyecto."
+        )
+
+    dataframe = pd.read_csv(dataset_path)
+
     print("\n--- Información inicial del dataset ---")
-    print(f"Dimensiones: {df.shape}")
-    print("\nDistribución de la variable objetivo (Target):")
-    print(df['Target'].value_counts())
-    
-    # 2. Limpieza de datos
-    # Revisar si hay valores nulos
-    nulos = df.isnull().sum().sum()
-    if nulos > 0:
-        print(f"\nSe encontraron {nulos} valores nulos. Procediendo a limpiarlos...")
-        df = df.dropna() # Estrategia simple: eliminar nulos. 
-    else:
-        print("\nNo se encontraron valores nulos en el dataset.")
-        
-    # Eliminar columnas irrelevantes si existieran (ej. IDs). En este dataset suele haber una columna 'Unnamed: 0' o similar al inicio
-    if 'Unnamed: 0' in df.columns:
-        df = df.drop(columns=['Unnamed: 0'])
+    print(f"Dimensiones: {dataframe.shape}")
 
-    # 3. Separación de características (X) y variable objetivo (y)
-    X = df.drop(columns=['Target'])
-    y = df['Target']
-    
-    # 4. Codificación de la variable objetivo (Target)
-    # Target actual: 'Dropout', 'Enrolled', 'Graduate'
-    # Lo convertiremos a números: 0, 1, 2
+    if TARGET_COLUMN not in dataframe.columns:
+        raise ValueError(
+            f"El dataset debe contener la columna '{TARGET_COLUMN}'."
+        )
+
+    # Elimina columnas exportadas accidentalmente como índices.
+    unnamed_columns = [
+        column
+        for column in dataframe.columns
+        if column.lower().startswith("unnamed")
+    ]
+    if unnamed_columns:
+        dataframe = dataframe.drop(columns=unnamed_columns)
+
+    duplicate_rows = int(dataframe.duplicated().sum())
+    null_values = int(dataframe.isna().sum().sum())
+
+    print(f"Filas duplicadas: {duplicate_rows}")
+    print(f"Valores nulos: {null_values}")
+
+    if duplicate_rows:
+        dataframe = dataframe.drop_duplicates().reset_index(drop=True)
+
+    if null_values:
+        # Para este dataset normalmente no hay nulos. Si aparecen, se
+        # eliminan para impedir que TensorFlow reciba valores NaN.
+        dataframe = dataframe.dropna().reset_index(drop=True)
+
+    print("\nDistribución de la variable objetivo:")
+    print(dataframe[TARGET_COLUMN].value_counts())
+
+    features = dataframe.drop(columns=[TARGET_COLUMN])
+    target = dataframe[TARGET_COLUMN].astype(str)
+
+    if not all(pd.api.types.is_numeric_dtype(features[column])
+               for column in features.columns):
+        non_numeric = [
+            column
+            for column in features.columns
+            if not pd.api.types.is_numeric_dtype(features[column])
+        ]
+        raise ValueError(
+            "Todas las variables predictoras deben ser numéricas. "
+            f"Columnas no numéricas: {non_numeric}"
+        )
+
     label_encoder = LabelEncoder()
-    y_encoded = label_encoder.fit_transform(y)
-    
-    print("\nMapeo de clases de la variable objetivo:")
+    target_encoded = label_encoder.fit_transform(target)
+
+    print("\nMapeo real de clases:")
     for index, label in enumerate(label_encoder.classes_):
         print(f"{label} -> {index}")
 
-    # 5. División del conjunto de datos (Entrenamiento y Prueba)
-    # 80% para entrenar, 20% para probar
-    X_train, X_test, y_train, y_test = train_test_split(X, y_encoded, test_size=0.2, random_state=42, stratify=y_encoded)
-    
-    print(f"\nTamaño del conjunto de entrenamiento: {X_train.shape[0]} muestras")
-    print(f"Tamaño del conjunto de prueba: {X_test.shape[0]} muestras")
+    expected_classes = {"Dropout", "Enrolled", "Graduate"}
+    observed_classes = set(label_encoder.classes_)
 
-    # 6. Normalización (Escalado de características)
-    # Las Redes Neuronales funcionan mucho mejor cuando los datos están normalizados (media 0, varianza 1)
+    if observed_classes != expected_classes:
+        raise ValueError(
+            "Las clases no coinciden con las esperadas. "
+            f"Encontradas: {sorted(observed_classes)}"
+        )
+
+    # 70 % entrenamiento y 30 % temporal.
+    (
+        features_train,
+        features_temporary,
+        target_train,
+        target_temporary,
+    ) = train_test_split(
+        features,
+        target_encoded,
+        test_size=0.30,
+        random_state=RANDOM_STATE,
+        stratify=target_encoded,
+    )
+
+    # Divide el 30 % temporal en 15 % validación y 15 % prueba.
+    (
+        features_validation,
+        features_test,
+        target_validation,
+        target_test,
+    ) = train_test_split(
+        features_temporary,
+        target_temporary,
+        test_size=0.50,
+        random_state=RANDOM_STATE,
+        stratify=target_temporary,
+    )
+
     scaler = StandardScaler()
-    X_train_scaled = scaler.fit_transform(X_train)
-    X_test_scaled = scaler.transform(X_test) # Ojo: se transforma usando las métricas del conjunto de entrenamiento
-    
-    print("\nPreparación de datos finalizada con éxito.")
-    
-    return X_train_scaled, X_test_scaled, y_train, y_test, label_encoder, scaler
+    features_train_scaled = scaler.fit_transform(features_train)
+    features_validation_scaled = scaler.transform(features_validation)
+    features_test_scaled = scaler.transform(features_test)
+
+    print("\nDivisión final:")
+    print(f"Entrenamiento: {len(features_train_scaled)} muestras")
+    print(f"Validación: {len(features_validation_scaled)} muestras")
+    print(f"Prueba final: {len(features_test_scaled)} muestras")
+    print(f"Variables predictoras: {features_train_scaled.shape[1]}")
+
+    return (
+        features_train_scaled,
+        features_validation_scaled,
+        features_test_scaled,
+        target_train,
+        target_validation,
+        target_test,
+        label_encoder,
+        scaler,
+        list(features.columns),
+    )
+
 
 if __name__ == "__main__":
-    # Ruta donde debes colocar el CSV descargado de Kaggle
-    ruta_csv = "dataset.csv" 
-    
-    try:
-        X_train, X_test, y_train, y_test, encoder, scaler = preparar_datos(ruta_csv)
-        
-        # Aquí ya tendrías los datos listos para introducirlos a tu modelo TensorFlow/Keras
-        print("\n¡Listo! Las variables X_train, y_train ya pueden ser usadas en un modelo Sequential de Keras.")
-        
-    except Exception as e:
-        print(f"Error: {e}")
+    preparar_datos("dataset.csv")
