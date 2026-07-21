@@ -290,30 +290,31 @@ def predict_risk(data: StudentData):
 
 
 def send_local_email(action: ActionData) -> str:
-    message = EmailMessage()
-    message["From"] = SENDER_EMAIL
-    message["To"] = action.email_tutor
-    message["Subject"] = (
-        f"Alerta de riesgo académico - {action.student_id}"
-    )
-    message.set_content(
-        "\n".join(
-            [
-                "Se detectó un estudiante con riesgo académico alto.",
-                f"Estudiante: {action.student_id}",
-                f"Estado predicho: {action.estado_predicho}",
-                f"Nivel de riesgo: {action.nivel_riesgo}",
-                f"Confianza: {action.confianza:.2%}",
-                "",
-                "Se recomienda iniciar el seguimiento académico.",
-            ]
-        )
+    alert_path = Path("app_data/alertas.log")
+    alert_path.parent.mkdir(parents=True, exist_ok=True)
+
+    alert_content = "\n".join(
+        [
+            "========================================",
+            "ALERTA DE RIESGO ACADÉMICO ALTO",
+            f"Estudiante: {action.student_id}",
+            f"Tutor: {action.email_tutor}",
+            f"Estado predicho: {action.estado_predicho}",
+            f"Nivel de riesgo: {action.nivel_riesgo}",
+            f"Confianza: {action.confianza:.2%}",
+            "Acción: iniciar seguimiento académico",
+            "========================================",
+            "",
+        ]
     )
 
-    with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as smtp:
-        smtp.send_message(message)
+    with alert_path.open(
+        "a",
+        encoding="utf-8",
+    ) as alert_file:
+        alert_file.write(alert_content)
 
-    return f"Correo enviado a {action.email_tutor}"
+    return f"Alerta local registrada en {alert_path}"
 
 
 @app.post("/actions/execute")

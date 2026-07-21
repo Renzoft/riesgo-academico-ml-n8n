@@ -1,0 +1,35 @@
+{
+  "flujo_n8n_riesgo_alto": {
+    "status_code": 200,
+    "response": {
+      "action_id": 4,
+      "status": "success",
+      "accion": "alerta_correo",
+      "details": "Alerta local registrada en app_data\\alertas.log"
+    }
+  },
+  "flujo_n8n_riesgo_bajo": {
+    "status_code": 200,
+    "response": {
+      "action_id": 5,
+      "status": "success",
+      "accion": "registrar_exito",
+      "details": "Predicción de riesgo bajo registrada sin alerta."
+    }
+  },
+  "flujo_n8n_riesgo_medio": {
+    "status_code": 200,
+    "response": {
+      "action_id": 6,
+      "status": "success",
+      "accion": "programar_seguimiento",
+      "details": "Caso registrado para seguimiento académico."
+    }
+  },
+  "caso_erroneo": {
+    "status_code": 422,
+    "response": {
+      "detail": "Se esperaban 34 características, pero se recibieron 3."
+    }
+  }
+}
