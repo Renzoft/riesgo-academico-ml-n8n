@@ -5,7 +5,7 @@
       "action_id": 4,
       "status": "success",
       "accion": "alerta_correo",
-      "details": "Alerta local registrada en app_data\\alertas.log"
+      "details": "Alerta local registrada en app_data/alertas.log. Correo enviado a MailHog exitosamente"
     }
   },
   "flujo_n8n_riesgo_bajo": {

@@ -314,7 +314,20 @@ def send_local_email(action: ActionData) -> str:
     ) as alert_file:
         alert_file.write(alert_content)
 
-    return f"Alerta local registrada en {alert_path}"
+    try:
+        msg = EmailMessage()
+        msg.set_content(alert_content)
+        msg["Subject"] = f"ALERTA: Estudiante en Riesgo Alto ({action.student_id})"
+        msg["From"] = SENDER_EMAIL
+        msg["To"] = action.email_tutor
+        
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            server.send_message(msg)
+        email_status = "Correo enviado a MailHog exitosamente"
+    except Exception as e:
+        email_status = f"Error al enviar correo: {e}"
+
+    return f"Alerta local registrada en {alert_path}. {email_status}"
 
 
 @app.post("/actions/execute")
