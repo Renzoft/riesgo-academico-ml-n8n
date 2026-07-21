@@ -1,4 +1,5 @@
 import json
+import hashlib
 import os
 import random
 from pathlib import Path
@@ -24,18 +25,22 @@ from tensorflow.keras.layers import Dense, Dropout, Input
 from tensorflow.keras.models import Sequential
 
 from preparacion_datos import preparar_datos
+from mlflow_traceability import build_traceability_manifest
 
 
 RANDOM_STATE = 42
 MODELS_DIR = Path("models")
 REPORTS_DIR = Path("reports")
-FIGURES_DIR = REPORTS_DIR / "figures"
-METRICS_DIR = REPORTS_DIR / "metrics"
-
-MODEL_PATH = MODELS_DIR / "modelo_estudiantes.keras"
-SCALER_PATH = MODELS_DIR / "scaler.pkl"
-ENCODER_PATH = MODELS_DIR / "encoder.pkl"
-FEATURE_NAMES_PATH = MODELS_DIR / "feature_names.json"
+CANDIDATE_DIR = MODELS_DIR / "candidate_v2"
+CANDIDATE_REPORTS_DIR = REPORTS_DIR / "candidate_v2"
+FIGURES_DIR = CANDIDATE_REPORTS_DIR / "figures"
+MODEL_PATH = CANDIDATE_DIR / "modelo_estudiantes.keras"
+PREPROCESSOR_PATH = CANDIDATE_DIR / "preprocessor.pkl"
+ENCODER_PATH = CANDIDATE_DIR / "encoder.pkl"
+FEATURE_NAMES_PATH = CANDIDATE_DIR / "feature_names.json"
+TRANSFORMED_FEATURE_NAMES_PATH = (
+    CANDIDATE_DIR / "transformed_feature_names.json"
+)
 
 MLFLOW_TRACKING_URI = os.getenv(
     "MLFLOW_TRACKING_URI",
@@ -143,17 +148,28 @@ def entrenar_modelo() -> None:
         target_validation,
         target_test,
         encoder,
-        scaler,
+        preprocessor,
         feature_names,
     ) = preparar_datos("dataset.csv")
 
-    MODELS_DIR.mkdir(parents=True, exist_ok=True)
-    METRICS_DIR.mkdir(parents=True, exist_ok=True)
+    CANDIDATE_DIR.mkdir(parents=True, exist_ok=True)
+    CANDIDATE_REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
-    joblib.dump(scaler, SCALER_PATH)
+    joblib.dump(preprocessor, PREPROCESSOR_PATH)
     joblib.dump(encoder, ENCODER_PATH)
     FEATURE_NAMES_PATH.write_text(
         json.dumps(feature_names, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    transformed_feature_names = (
+        preprocessor.get_feature_names_out().tolist()
+    )
+    TRANSFORMED_FEATURE_NAMES_PATH.write_text(
+        json.dumps(
+            transformed_feature_names,
+            indent=2,
+            ensure_ascii=False,
+        ),
         encoding="utf-8",
     )
 
@@ -180,7 +196,11 @@ def entrenar_modelo() -> None:
     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
     mlflow.set_experiment(MLFLOW_EXPERIMENT)
 
-    with mlflow.start_run(run_name="MLP_64_32"):
+    dataset_hash = hashlib.sha256(
+        Path("dataset.csv").read_bytes()
+    ).hexdigest()
+
+    with mlflow.start_run(run_name="MLP_64_32_preprocessing_v2"):
         model = crear_modelo(input_dim, num_classes)
 
         print("\nArquitectura del modelo:")
@@ -197,6 +217,13 @@ def entrenar_modelo() -> None:
                 "learning_rate": learning_rate,
                 "optimizer": "Adam",
                 "input_features": input_dim,
+                "original_features": len(feature_names),
+                "preprocessing_version": "2",
+                "categorical_encoding": "one_hot",
+                "numeric_scaling": "standard_scaler",
+                "missing_numeric": "median",
+                "missing_categorical": "most_frequent",
+                "dataset_sha256": dataset_hash,
                 "class_weight_balancing": True,
                 "random_state": RANDOM_STATE,
             }
@@ -297,7 +324,7 @@ def entrenar_modelo() -> None:
             "classification_report": report,
         }
 
-        metrics_path = METRICS_DIR / "metricas_modelo.json"
+        metrics_path = CANDIDATE_REPORTS_DIR / "metricas_modelo.json"
         metrics_path.write_text(
             json.dumps(metrics, indent=2, ensure_ascii=False),
             encoding="utf-8",
@@ -322,6 +349,58 @@ def entrenar_modelo() -> None:
         mlflow.log_artifact(
             str(FEATURE_NAMES_PATH),
             artifact_path="preprocesamiento",
+        )
+        mlflow.log_artifact(
+            str(TRANSFORMED_FEATURE_NAMES_PATH),
+            artifact_path="preprocesamiento",
+        )
+        mlflow.log_artifact(
+            str(PREPROCESSOR_PATH),
+            artifact_path="preprocesamiento",
+        )
+        mlflow.log_artifact(
+            str(ENCODER_PATH),
+            artifact_path="preprocesamiento",
+        )
+        quality_report_path = Path("reports/data_quality/latest.json")
+        if quality_report_path.exists():
+            mlflow.log_artifact(
+                str(quality_report_path),
+                artifact_path="calidad_datos",
+            )
+        traceability = build_traceability_manifest(
+            dataset_path=Path("dataset.csv"),
+            schema={
+                "original_feature_names": feature_names,
+                "transformed_feature_names": transformed_feature_names,
+            },
+            code_paths=[
+                Path("entrenamiento_modelo.py"),
+                Path("preparacion_datos.py"),
+                Path("preprocessing_pipeline.py"),
+                Path("feature_schema.py"),
+            ],
+            artifact_roles={
+                "model": str(MODEL_PATH),
+                "preprocessor": str(PREPROCESSOR_PATH),
+                "target_encoder": str(ENCODER_PATH),
+                "original_feature_names": str(FEATURE_NAMES_PATH),
+                "transformed_feature_names": str(
+                    TRANSFORMED_FEATURE_NAMES_PATH
+                ),
+                "evaluation": str(metrics_path),
+            },
+        )
+        mlflow.log_dict(
+            traceability,
+            "traceability/run_manifest.json",
+        )
+        mlflow.set_tags(
+            {
+                "model_stage": "candidate",
+                "preprocessing_version": "2",
+                "dataset_sha256": dataset_hash,
+            }
         )
 
         # Compatibilidad entre versiones de MLflow.

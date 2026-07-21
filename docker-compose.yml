@@ -12,6 +12,7 @@ services:
     volumes:
       - ./models:/app/models:ro
       - ./app_data:/app/app_data
+      - ./dataset.csv:/app/dataset.csv:ro
     depends_on:
       - mailhog
     restart: unless-stopped

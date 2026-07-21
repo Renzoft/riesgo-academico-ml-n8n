@@ -5,12 +5,18 @@ import sqlite3
 from contextlib import asynccontextmanager
 from email.message import EmailMessage
 from pathlib import Path
+from typing import Literal
 
 import joblib
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from feature_schema import FEATURE_FIELD_MAP, StudentFeatures
+from model_release import load_active_release, resolve_release_artifacts
+from monitoring import generate_monitoring_report
 
 
 MODEL_PATH = Path(
@@ -18,6 +24,9 @@ MODEL_PATH = Path(
 )
 SCALER_PATH = Path(
     os.getenv("SCALER_PATH", "models/scaler.pkl")
+)
+PREPROCESSOR_PATH = Path(
+    os.getenv("PREPROCESSOR_PATH", "models/preprocessor.pkl")
 )
 ENCODER_PATH = Path(
     os.getenv("ENCODER_PATH", "models/encoder.pkl")
@@ -40,15 +49,45 @@ model = None
 scaler = None
 encoder = None
 feature_names: list[str] = []
+active_release: dict | None = None
 
 
 class StudentData(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     student_id: str = Field(default="SIN-CODIGO", max_length=100)
     email_tutor: str = Field(
         default="tutor@universidad.local",
         max_length=200,
     )
-    features: list[float]
+    student_data: StudentFeatures | None = None
+    features: list[float] | None = Field(
+        default=None,
+        description=(
+            "Formato posicional anterior; usar student_data en integraciones "
+            "nuevas."
+        ),
+    )
+    prediction_source: Literal["production", "manual", "system_test"] = (
+        "manual"
+    )
+
+    @model_validator(mode="after")
+    def validate_feature_source(self):
+        if self.student_data is None and self.features is None:
+            raise ValueError(
+                "Debes enviar student_data con campos nombrados."
+            )
+        if self.student_data is not None and self.features is not None:
+            raise ValueError(
+                "Envía student_data o features, pero no ambos."
+            )
+        return self
+
+    def model_vector(self, model_feature_names: list[str]) -> list[float]:
+        if self.student_data is not None:
+            return self.student_data.to_model_vector(model_feature_names)
+        return list(self.features or [])
 
 
 class ActionData(BaseModel):
@@ -59,6 +98,13 @@ class ActionData(BaseModel):
     nivel_riesgo: str
     confianza: float
     accion: str
+
+
+class OutcomeData(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    student_id: str = Field(min_length=1, max_length=100)
+    actual_status: Literal["Dropout", "Enrolled", "Graduate"]
 
 
 def get_connection() -> sqlite3.Connection:
@@ -92,17 +138,81 @@ def initialize_database() -> None:
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (prediction_id) REFERENCES predictions(id)
             );
+
+            CREATE TABLE IF NOT EXISTS outcomes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                student_id TEXT NOT NULL,
+                actual_status TEXT NOT NULL,
+                recorded_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
             """
         )
+        prediction_columns = {
+            row[1]
+            for row in connection.execute(
+                "PRAGMA table_info(predictions)"
+            ).fetchall()
+        }
+        migrations = {
+            "prediction_source": (
+                "ALTER TABLE predictions ADD COLUMN prediction_source "
+                "TEXT NOT NULL DEFAULT 'legacy'"
+            ),
+            "input_features": (
+                "ALTER TABLE predictions ADD COLUMN input_features TEXT"
+            ),
+            "model_release": (
+                "ALTER TABLE predictions ADD COLUMN model_release "
+                "TEXT NOT NULL DEFAULT 'legacy'"
+            ),
+        }
+        for column, statement in migrations.items():
+            if column not in prediction_columns:
+                connection.execute(statement)
         connection.commit()
 
 
 def load_artifacts() -> None:
-    global model, scaler, encoder, feature_names
+    global model, scaler, encoder, feature_names, active_release
 
+    release = load_active_release()
+    if release is not None:
+        paths = resolve_release_artifacts(release)
+        required_names = {"model", "transformer", "encoder", "feature_names"}
+        missing_names = sorted(required_names - set(paths))
+        if missing_names:
+            raise ValueError(
+                "El manifiesto de release no contiene: "
+                + ", ".join(missing_names)
+            )
+        missing_paths = [
+            str(paths[name])
+            for name in required_names
+            if not paths[name].exists()
+        ]
+        if missing_paths:
+            raise FileNotFoundError(
+                "Faltan artefactos de la release: "
+                + ", ".join(missing_paths)
+            )
+
+        model = tf.keras.models.load_model(paths["model"])
+        scaler = joblib.load(paths["transformer"])
+        encoder = joblib.load(paths["encoder"])
+        feature_names = json.loads(
+            paths["feature_names"].read_text(encoding="utf-8")
+        )
+        active_release = release
+        return
+
+    transformer_path = (
+        PREPROCESSOR_PATH
+        if PREPROCESSOR_PATH.exists()
+        else SCALER_PATH
+    )
     required_paths = [
         MODEL_PATH,
-        SCALER_PATH,
+        transformer_path,
         ENCODER_PATH,
         FEATURE_NAMES_PATH,
     ]
@@ -119,11 +229,12 @@ def load_artifacts() -> None:
         )
 
     model = tf.keras.models.load_model(MODEL_PATH)
-    scaler = joblib.load(SCALER_PATH)
+    scaler = joblib.load(transformer_path)
     encoder = joblib.load(ENCODER_PATH)
     feature_names = json.loads(
         FEATURE_NAMES_PATH.read_text(encoding="utf-8")
     )
+    active_release = None
 
 
 @asynccontextmanager
@@ -165,9 +276,19 @@ def health():
             for artifact in (model, scaler, encoder)
         ),
         "expected_features": (
-            int(scaler.n_features_in_)
+            len(feature_names)
             if scaler is not None
             else None
+        ),
+        "preprocessing": (
+            "pipeline_v2"
+            if scaler is not None and hasattr(scaler, "transformers_")
+            else "standard_scaler_v1"
+        ),
+        "active_release": (
+            active_release.get("release_id")
+            if active_release is not None
+            else "legacy"
         ),
     }
 
@@ -181,9 +302,15 @@ def model_info():
         )
 
     return {
-        "expected_features": int(scaler.n_features_in_),
+        "expected_features": len(feature_names),
         "feature_names": feature_names,
+        "api_feature_names": list(FEATURE_FIELD_MAP),
         "classes": encoder.classes_.tolist(),
+        "active_release": (
+            active_release.get("release_id")
+            if active_release is not None
+            else "legacy"
+        ),
     }
 
 
@@ -198,20 +325,25 @@ def predict_risk(data: StudentData):
             ),
         )
 
-    expected_features = int(scaler.n_features_in_)
+    expected_features = len(feature_names)
 
-    if len(data.features) != expected_features:
+    try:
+        model_input = data.model_vector(feature_names)
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+
+    if len(model_input) != expected_features:
         raise HTTPException(
             status_code=422,
             detail=(
                 f"Se esperaban {expected_features} características, "
-                f"pero se recibieron {len(data.features)}."
+                f"pero se recibieron {len(model_input)}."
             ),
         )
 
     try:
         input_data = np.asarray(
-            data.features,
+            model_input,
             dtype=np.float64,
         ).reshape(1, -1)
 
@@ -220,7 +352,14 @@ def predict_risk(data: StudentData):
                 "Las características contienen NaN o infinitos."
             )
 
-        input_scaled = scaler.transform(input_data)
+        if hasattr(scaler, "transformers_"):
+            input_frame = pd.DataFrame(
+                input_data,
+                columns=feature_names,
+            )
+            input_scaled = scaler.transform(input_frame)
+        else:
+            input_scaled = scaler.transform(input_data)
         probabilities = model.predict(
             input_scaled,
             verbose=0,
@@ -250,9 +389,12 @@ def predict_risk(data: StudentData):
                     email_tutor,
                     estado_predicho,
                     nivel_riesgo,
-                    confianza
+                    confianza,
+                    prediction_source,
+                    input_features,
+                    model_release
                 )
-                VALUES (?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     data.student_id,
@@ -260,6 +402,16 @@ def predict_risk(data: StudentData):
                     predicted_class,
                     risk_level,
                     confidence,
+                    data.prediction_source,
+                    json.dumps(
+                        dict(zip(feature_names, model_input)),
+                        ensure_ascii=False,
+                    ),
+                    (
+                        active_release.get("release_id")
+                        if active_release is not None
+                        else "legacy"
+                    ),
                 ),
             )
             connection.commit()
@@ -271,6 +423,7 @@ def predict_risk(data: StudentData):
             "estado_predicho": predicted_class,
             "nivel_riesgo": risk_level,
             "confianza": confidence,
+            "prediction_source": data.prediction_source,
             "probabilidades": {
                 str(class_name): float(probability)
                 for class_name, probability in zip(
@@ -439,3 +592,33 @@ def history(limit: int = 50):
         "predictions": predictions,
         "actions": actions,
     }
+
+
+@app.post("/outcomes")
+def register_outcome(outcome: OutcomeData):
+    with get_connection() as connection:
+        cursor = connection.execute(
+            """
+            INSERT INTO outcomes (student_id, actual_status)
+            VALUES (?, ?)
+            """,
+            (outcome.student_id, outcome.actual_status),
+        )
+        connection.commit()
+        outcome_id = int(cursor.lastrowid)
+    return {"outcome_id": outcome_id, **outcome.model_dump()}
+
+
+@app.get("/monitoring")
+def monitoring_report(
+    source: Literal["production", "manual", "system_test"] = "production",
+    minimum_samples: int = 30,
+):
+    safe_minimum = min(max(minimum_samples, 1), 10000)
+    with get_connection() as connection:
+        return generate_monitoring_report(
+            connection,
+            Path("dataset.csv"),
+            source=source,
+            minimum_samples=safe_minimum,
+        )

@@ -74,6 +74,7 @@ def find_payloads_by_predicted_risk(
         payload = {
             "student_id": f"PRUEBA-{row_index}",
             "email_tutor": "tutor@universidad.local",
+            "prediction_source": "system_test",
             "features": features,
         }
 
@@ -131,6 +132,7 @@ def main() -> None:
     invalid_payload = {
         "student_id": "PRUEBA-ERROR",
         "email_tutor": "tutor@universidad.local",
+        "prediction_source": "system_test",
         "features": [1.0, 2.0, 3.0],
     }
 

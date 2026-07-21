@@ -16,6 +16,7 @@ __pycache__/
 models/*.keras
 models/*.h5
 models/*.pkl
+models/candidates/
 mlflow.db
 mlruns/
 mlartifacts/
