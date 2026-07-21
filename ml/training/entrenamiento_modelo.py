@@ -178,7 +178,23 @@ def entrenar_modelo() -> None:
         Path("dataset.csv").read_bytes()
     ).hexdigest()
 
-    with mlflow.start_run(run_name="MLP_64_32_preprocessing_v2"):
+    with mlflow.start_run(run_name="MLP_64_32_preprocessing_v2") as run:
+        # Deja el enlace hacia MLflow junto a los artefactos, para que la API
+        # pueda informar con que entrenamiento se genero cada prediccion.
+        CANDIDATE_DIR.mkdir(parents=True, exist_ok=True)
+        (CANDIDATE_DIR / "model_run.json").write_text(
+            json.dumps(
+                {
+                    "run_id": run.info.run_id,
+                    "experiment": MLFLOW_EXPERIMENT,
+                    "run_name": "MLP_64_32_preprocessing_v2",
+                },
+                indent=2,
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+
         model = crear_modelo(input_dim, num_classes)
 
         print("\nArquitectura del modelo:")

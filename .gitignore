@@ -17,6 +17,9 @@ models/*.keras
 models/*.h5
 models/*.pkl
 models/candidates/
+# Enlace al run de MLflow: se regenera en cada entrenamiento y apunta a la
+# base local de experimentos, por lo que no es portable entre equipos.
+models/model_run.json
 mlflow.db
 mlruns/
 mlartifacts/
@@ -28,3 +31,4 @@ app_data/
 .env
 .vscode/
 .idea/
+.claude/

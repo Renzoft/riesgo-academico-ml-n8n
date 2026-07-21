@@ -37,6 +37,12 @@ ENCODER_PATH = Path(
 FEATURE_NAMES_PATH = Path(
     os.getenv("FEATURE_NAMES_PATH", "models/feature_names.json")
 )
+# Enlace entre el modelo servido y el experimento que lo entreno en MLflow.
+MODEL_RUN_PATH = Path(
+    os.getenv("MODEL_RUN_PATH", "models/model_run.json")
+)
+MLFLOW_UI_BASE = os.getenv("MLFLOW_UI_BASE", "http://localhost:5001")
+MLFLOW_EXPERIMENT_ID = os.getenv("MLFLOW_EXPERIMENT_ID", "1")
 DATABASE_PATH = Path(
     os.getenv("DATABASE_PATH", "app_data/riesgo_academico.db")
 )
@@ -53,6 +59,7 @@ scaler = None
 encoder = None
 feature_names: list[str] = []
 active_release: dict | None = None
+mlflow_run_id: str | None = None
 
 
 class StudentData(BaseModel):
@@ -168,6 +175,9 @@ def initialize_database() -> None:
                 "ALTER TABLE predictions ADD COLUMN model_release "
                 "TEXT NOT NULL DEFAULT 'legacy'"
             ),
+            "mlflow_run_id": (
+                "ALTER TABLE predictions ADD COLUMN mlflow_run_id TEXT"
+            ),
         }
         for column, statement in migrations.items():
             if column not in prediction_columns:
@@ -175,8 +185,21 @@ def initialize_database() -> None:
         connection.commit()
 
 
+def read_local_run_id() -> str | None:
+    """Lee el run de MLflow asociado a los artefactos legacy de models/."""
+    if not MODEL_RUN_PATH.exists():
+        return None
+    try:
+        return json.loads(
+            MODEL_RUN_PATH.read_text(encoding="utf-8")
+        ).get("run_id")
+    except (ValueError, OSError):
+        return None
+
+
 def load_artifacts() -> None:
     global model, scaler, encoder, feature_names, active_release
+    global mlflow_run_id
 
     release = load_active_release()
     if release is not None:
@@ -206,6 +229,7 @@ def load_artifacts() -> None:
             paths["feature_names"].read_text(encoding="utf-8")
         )
         active_release = release
+        mlflow_run_id = release.get("source_run_id")
         return
 
     transformer_path = (
@@ -238,6 +262,7 @@ def load_artifacts() -> None:
         FEATURE_NAMES_PATH.read_text(encoding="utf-8")
     )
     active_release = None
+    mlflow_run_id = read_local_run_id()
 
 
 @asynccontextmanager
@@ -291,6 +316,7 @@ def health():
             if active_release is not None
             else "legacy"
         ),
+        "mlflow_run_id": mlflow_run_id,
     }
 
 
@@ -310,6 +336,13 @@ def model_info():
             active_release.get("release_id")
             if active_release is not None
             else "legacy"
+        ),
+        "mlflow_run_id": mlflow_run_id,
+        "mlflow_ui": (
+            f"{MLFLOW_UI_BASE}/#/experiments/"
+            f"{MLFLOW_EXPERIMENT_ID}/runs/{mlflow_run_id}"
+            if mlflow_run_id
+            else None
         ),
     }
 
@@ -391,9 +424,10 @@ def predict_risk(data: StudentData):
                     confianza,
                     prediction_source,
                     input_features,
-                    model_release
+                    model_release,
+                    mlflow_run_id
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     data.student_id,
@@ -411,6 +445,7 @@ def predict_risk(data: StudentData):
                         if active_release is not None
                         else "legacy"
                     ),
+                    mlflow_run_id,
                 ),
             )
             connection.commit()
@@ -487,6 +522,7 @@ def execute_action(action: ActionData):
         "alerta_correo",
         "programar_seguimiento",
         "registrar_exito",
+        "revision_manual",
     }
 
     if action.accion not in allowed_actions:
@@ -506,6 +542,14 @@ def execute_action(action: ActionData):
         elif action.accion == "programar_seguimiento":
             details = (
                 "Caso registrado para seguimiento académico."
+            )
+        elif action.accion == "revision_manual":
+            # El modelo no alcanzo la confianza minima exigida, de modo que el
+            # caso se deriva a un analista en lugar de alertar al tutor.
+            details = (
+                "Predicción con confianza de "
+                f"{action.confianza:.2%}, por debajo del umbral. "
+                "Caso derivado a revisión manual sin notificar al tutor."
             )
         else:
             details = (
