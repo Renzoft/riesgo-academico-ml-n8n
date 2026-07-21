@@ -1,10 +1,10 @@
 import pandas as pd
 import pytest
 
-from preprocesamiento_pipeline import (
-    EXPECTED_FEATURES,
-    build_preprocessor,
-    validate_feature_schema,
+from ml.pipeline.preprocesamiento_pipeline import (
+    ALL_MODEL_FEATURES,
+    create_preprocessing_pipeline,
+    validate_feature_groups,
 )
 
 
@@ -12,7 +12,7 @@ def sample_frame() -> pd.DataFrame:
     rows = []
     for variant in (0, 1):
         row = {}
-        for name in EXPECTED_FEATURES:
+        for name in ALL_MODEL_FEATURES:
             row[name] = variant
         row["Marital status"] = variant + 1
         row["Application mode"] = variant + 1
@@ -29,27 +29,27 @@ def sample_frame() -> pd.DataFrame:
 
 
 def test_schema_rejects_missing_columns():
-    columns = EXPECTED_FEATURES[:-1]
+    columns = ALL_MODEL_FEATURES[:-1]
 
-    with pytest.raises(ValueError, match="Faltantes"):
-        validate_feature_schema(columns)
+    with pytest.raises(ValueError, match="No presentes"):
+        validate_feature_groups(columns)
 
 
 def test_pipeline_separates_and_transforms_feature_types():
     frame = sample_frame()
-    validate_feature_schema(frame.columns)
-    preprocessor = build_preprocessor()
+    validate_feature_groups(list(frame.columns))
+    preprocessor = create_preprocessing_pipeline()
 
     transformed = preprocessor.fit_transform(frame)
 
     assert transformed.shape[0] == 2
-    assert transformed.shape[1] > len(EXPECTED_FEATURES)
+    assert transformed.shape[1] > len(ALL_MODEL_FEATURES)
     assert not pd.isna(transformed).any()
 
 
 def test_pipeline_accepts_unknown_category_after_fit():
     frame = sample_frame()
-    preprocessor = build_preprocessor().fit(frame)
+    preprocessor = create_preprocessing_pipeline().fit(frame)
     unknown = frame.iloc[[0]].copy()
     unknown["Course"] = 999
 

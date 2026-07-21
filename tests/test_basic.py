@@ -2,8 +2,8 @@ from fastapi.testclient import TestClient
 import pytest
 
 import api
-from feature_schema import FEATURE_FIELD_MAP, StudentFeatures
-from preprocessing_pipeline import (
+from api.schemas import FEATURE_FIELD_MAP, StudentFeatures
+from ml.pipeline.preprocesamiento_pipeline import (
     ALL_MODEL_FEATURES,
     BINARY_FEATURES,
     CATEGORICAL_FEATURES,

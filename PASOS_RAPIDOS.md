@@ -59,8 +59,9 @@ Servicios:
 
 ## 5. n8n
 
-Importa `n8n/workflow_base_riesgo_academico.json` y completa las tres
-acciones siguiendo `n8n/CONFIGURACION_FLUJO.md`.
+Importa `n8n/workflow_riesgo_academico_completo.json`. Este archivo ya
+contiene las tres ramas de riesgo y sus acciones. Consulta
+`n8n/CONFIGURACION_FLUJO.md` para ajustar credenciales y destinatarios.
 
 ## 6. Pruebas
 

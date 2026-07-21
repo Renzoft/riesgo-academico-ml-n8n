@@ -1,10 +1,10 @@
 import numpy as np
 
-from evaluacion_avanzada import (
+from ml.evaluation.evaluacion_avanzada import (
     expected_calibration_error,
     multiclass_brier_score,
 )
-from evaluacion_cv_mlp import summarize_folds
+from ml.evaluation.evaluacion_cv_mlp import summarize_folds
 
 
 def test_perfect_probabilities_have_zero_calibration_errors():

@@ -1,12 +1,12 @@
 import json
 from pathlib import Path
 
-from gestionar_release import (
+from scripts.gestionar_release import (
     activate_release,
     promotion_criteria,
     rollback_release,
 )
-from model_release import load_active_release
+from infrastructure.model_release import load_active_release
 
 
 def metrics(accuracy=0.8, macro_f1=0.7, dropout_recall=0.75):

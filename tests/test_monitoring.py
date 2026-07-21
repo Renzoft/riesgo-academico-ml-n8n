@@ -3,7 +3,7 @@ import sqlite3
 
 import pandas as pd
 
-from monitoring import (
+from core.monitoring import (
     categorical_drift,
     ensure_monitoring_schema,
     generate_monitoring_report,

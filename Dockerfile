@@ -10,11 +10,11 @@ COPY requirements.txt .
 RUN python -m pip install --no-cache-dir --upgrade pip \
     && python -m pip install --no-cache-dir -r requirements.txt
 
-COPY api.py .
-COPY feature_schema.py .
-COPY model_release.py .
-COPY monitoring.py .
-COPY preprocessing_pipeline.py .
+COPY api ./api
+COPY core ./core
+COPY infrastructure ./infrastructure
+COPY ml ./ml
+COPY preprocesamiento_pipeline.py .
 COPY models ./models
 
 RUN mkdir -p /app/app_data

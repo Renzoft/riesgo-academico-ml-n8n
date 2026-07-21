@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from calidad_datos import prepare_training_dataframe
+from core.calidad_datos import prepare_training_dataframe
 
 
 def base_frame() -> pd.DataFrame:

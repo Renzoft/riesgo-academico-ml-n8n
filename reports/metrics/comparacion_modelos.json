@@ -11,7 +11,7 @@
     "dataset_sha256": null
   },
   "best_candidate": {
-    "source": "reports\\candidate_v2\\metricas_modelo.json",
+    "source": "models\\releases\\preprocessing-v2-97984f56\\metrics.json",
     "run_id": null,
     "accuracy": 0.7786144614219666,
     "macro_f1": 0.7357779333261272,
@@ -34,7 +34,7 @@
   "equivalent_candidate_groups": [
     [
       {
-        "source": "reports\\candidate_v2\\metricas_modelo.json",
+        "source": "models\\releases\\preprocessing-v2-97984f56\\metrics.json",
         "run_id": null,
         "accuracy": 0.7786144614219666,
         "macro_f1": 0.7357779333261272,
@@ -43,17 +43,6 @@
         "enrolled_f1": 0.5474452554744526,
         "graduate_f1": 0.8609467455621301,
         "dataset_sha256": null
-      },
-      {
-        "source": "reports\\metrics\\candidates\\af5b6337e6454de0b270c87ba8a350bd\\metrics.json",
-        "run_id": "af5b6337e6454de0b270c87ba8a350bd",
-        "accuracy": 0.7786144614219666,
-        "macro_f1": 0.7357779333261272,
-        "weighted_f1": 0.7847784686085391,
-        "dropout_recall": 0.705607476635514,
-        "enrolled_f1": 0.5474452554744526,
-        "graduate_f1": 0.8609467455621301,
-        "dataset_sha256": "ff327a7ed348140d42dd682df49e36331e2ca91ca41b8fb9ad911a4f5fba0f4e"
       }
     ]
   ]
