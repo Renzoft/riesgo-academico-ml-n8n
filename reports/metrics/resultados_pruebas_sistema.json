@@ -2,7 +2,7 @@
   "flujo_n8n_riesgo_alto": {
     "status_code": 200,
     "response": {
-      "action_id": 27,
+      "action_id": 63,
       "status": "success",
       "accion": "alerta_correo",
       "details": "Alerta local registrada en app_data/alertas.log. Correo enviado a MailHog exitosamente"
@@ -11,7 +11,7 @@
   "flujo_n8n_riesgo_bajo": {
     "status_code": 200,
     "response": {
-      "action_id": 28,
+      "action_id": 64,
       "status": "success",
       "accion": "registrar_exito",
       "details": "Predicción de riesgo bajo registrada sin alerta."
@@ -20,7 +20,7 @@
   "flujo_n8n_riesgo_medio": {
     "status_code": 200,
     "response": {
-      "action_id": 29,
+      "action_id": 65,
       "status": "success",
       "accion": "programar_seguimiento",
       "details": "Caso registrado para seguimiento académico."

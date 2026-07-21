@@ -30,6 +30,22 @@ export function useEstudiantes(filtros: FiltrosBandeja) {
   });
 }
 
+export interface Resumen {
+  total_estudiantes: number;
+  confianza_media: number | null;
+  por_nivel_riesgo: Record<string, number>;
+  por_estado_caso: Record<string, number>;
+  pendientes_de_atencion: number;
+  cobertura_seguimiento: number;
+}
+
+export function useResumen() {
+  return useQuery({
+    queryKey: ["resumen"],
+    queryFn: () => api.get<Resumen>("/panel/resumen"),
+  });
+}
+
 export function useExplicacion(predictionId: number | undefined) {
   return useQuery({
     queryKey: ["explicacion", predictionId],
@@ -52,6 +68,7 @@ export function useActualizarCaso(predictionId: number) {
     onSuccess: () => {
       // La bandeja filtra por estado, asi que debe refrescarse.
       cliente.invalidateQueries({ queryKey: ["estudiantes"] });
+      cliente.invalidateQueries({ queryKey: ["resumen"] });
       cliente.invalidateQueries({ queryKey: ["explicacion", predictionId] });
     },
   });

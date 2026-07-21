@@ -1,5 +1,5 @@
 import { Link, useSearchParams } from "react-router-dom";
-import { useEstudiantes } from "../api/consultas";
+import { useEstudiantes, useResumen } from "../api/consultas";
 import type { CasoResumen, EstadoCaso, NivelRiesgo } from "../api/tipos";
 import {
   certezaEnPalabras,
@@ -9,17 +9,48 @@ import {
   MensajeError,
 } from "../componentes/Indicadores";
 
+function BarraResumen() {
+  const { data } = useResumen();
+  if (!data) return null;
+
+  const riesgo = data.por_nivel_riesgo;
+  return (
+    <div className="resumen">
+      <div className="resumen-dato">
+        <span className="resumen-cifra">{data.total_estudiantes}</span>
+        <span className="resumen-etiqueta">Estudiantes</span>
+      </div>
+      <div className="resumen-dato">
+        <span className="resumen-cifra alto">{riesgo.Alto ?? 0}</span>
+        <span className="resumen-etiqueta">Riesgo alto</span>
+      </div>
+      <div className="resumen-dato">
+        <span className="resumen-cifra">{riesgo.Medio ?? 0}</span>
+        <span className="resumen-etiqueta">Riesgo medio</span>
+      </div>
+      <div className="resumen-dato">
+        <span className="resumen-cifra">{riesgo.Bajo ?? 0}</span>
+        <span className="resumen-etiqueta">Riesgo bajo</span>
+      </div>
+      <div className="resumen-dato">
+        <span className="resumen-cifra">{data.pendientes_de_atencion}</span>
+        <span className="resumen-etiqueta">Sin atender</span>
+      </div>
+    </div>
+  );
+}
+
 function Fila({ caso }: { caso: CasoResumen }) {
   const { estudiante } = caso;
   const nombre = estudiante.nombre_completo ?? caso.student_id;
-  const sinDirectorio = estudiante.nombre_completo === null;
+  const enDirectorio = estudiante.nombre_completo !== null;
 
   return (
     <Link to={`/caso/${caso.prediction_id}`} className="caso">
       <div className="caso-linea">
         <InsigniaRiesgo nivel={caso.nivel_riesgo} />
         <span className="caso-nombre">{nombre}</span>
-        {!sinDirectorio && (
+        {enDirectorio && (
           <span className="caso-meta">
             {estudiante.codigo}
             {estudiante.carrera && ` · ${estudiante.carrera}`}
@@ -37,8 +68,12 @@ function Fila({ caso }: { caso: CasoResumen }) {
       <div className="caso-pie">
         <span>{certezaEnPalabras(caso.confianza)}</span>
         {caso.total_factores_riesgo > 1 && (
-          <span>{caso.total_factores_riesgo} factores en total</span>
+          <>
+            <span className="separador">|</span>
+            <span>{caso.total_factores_riesgo} factores</span>
+          </>
         )}
+        <span className="separador">|</span>
         <InsigniaEstado estado={caso.estado_caso} />
       </div>
     </Link>
@@ -69,6 +104,8 @@ export default function Bandeja() {
 
   return (
     <div className="contenedor">
+      <BarraResumen />
+
       <div className="filtros">
         <select
           value={parametros.get("riesgo") ?? ""}
@@ -86,7 +123,7 @@ export default function Bandeja() {
           onChange={(e) => cambiar("estado", e.target.value)}
           aria-label="Filtrar por estado del caso"
         >
-          <option value="pendiente">Pendientes</option>
+          <option value="pendiente">Sin atender</option>
           <option value="contactado">Contactados</option>
           <option value="en_seguimiento">En seguimiento</option>
           <option value="cerrado">Cerrados</option>
@@ -111,15 +148,17 @@ export default function Bandeja() {
       {data && data.estudiantes.length === 0 && (
         <EstadoVacio
           titulo="No hay casos con estos filtros"
-          detalle="Prueba con otro nivel de riesgo o estado."
+          detalle="Prueba con otro nivel de riesgo o cambia el estado."
         />
       )}
 
       {data && data.estudiantes.length > 0 && (
         <>
-          <p className="caso-meta" style={{ marginBottom: 12 }}>
+          <p className="conteo">
             {data.total} caso{data.total === 1 ? "" : "s"}
+            {filtros.estado === "pendiente" && " sin atender"}
           </p>
+
           {data.estudiantes.map((caso) => (
             <Fila key={caso.prediction_id} caso={caso} />
           ))}

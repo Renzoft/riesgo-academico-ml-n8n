@@ -19,11 +19,26 @@ export function certezaEnPalabras(confianza: number): string {
 }
 
 const ETIQUETA_ESTADO: Record<EstadoCaso, string> = {
-  pendiente: "Pendiente",
+  pendiente: "Sin atender",
   contactado: "Contactado",
   en_seguimiento: "En seguimiento",
   cerrado: "Cerrado",
 };
+
+/**
+ * Las clases llegan en ingles porque provienen del encoder del modelo, que
+ * conserva los valores originales del dataset. Se traducen solo al mostrar:
+ * los datos almacenados mantienen la etiqueta original por trazabilidad.
+ */
+const CLASE_EN_ESPANOL: Record<string, string> = {
+  Dropout: "Abandono",
+  Enrolled: "Continúa matriculado",
+  Graduate: "Graduación",
+};
+
+export function claseEnEspanol(clase: string): string {
+  return CLASE_EN_ESPANOL[clase] ?? clase;
+}
 
 export function InsigniaEstado({ estado }: { estado: EstadoCaso }) {
   return <span className="insignia estado">{ETIQUETA_ESTADO[estado]}</span>;

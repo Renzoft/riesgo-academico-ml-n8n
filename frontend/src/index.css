@@ -1,50 +1,41 @@
+/* Panel académico. Tema claro fijo: se usa en entornos institucionales y en
+   proyección durante la exposición, donde el fondo oscuro se lee peor. */
+
 :root {
-  --fondo: #f7f8fa;
+  --fondo: #f4f5f7;
   --superficie: #ffffff;
-  --borde: #e2e5ea;
-  --texto: #1a1d23;
-  --texto-suave: #616a76;
+  --superficie-alt: #fafbfc;
+  --borde: #dfe3e8;
+  --borde-suave: #edeff2;
 
-  --alto-fondo: #fdecec;
-  --alto-texto: #a01b1b;
-  --medio-fondo: #fdf3e0;
-  --medio-texto: #8a5a04;
-  --bajo-fondo: #e9f5ec;
-  --bajo-texto: #1f6b38;
+  --texto: #16202c;
+  --texto-medio: #46525f;
+  --texto-suave: #6b7684;
 
-  --critico: #c62828;
-  --grave: #b45309;
-  --moderado: #6b7280;
-  --protector: #1f6b38;
+  /* Granate institucional */
+  --acento: #7b1e28;
+  --acento-claro: #f6ecee;
 
-  --acento: #2557b8;
-  --radio: 10px;
-  --sombra: 0 1px 2px rgba(16, 24, 40, 0.06);
-}
+  /* Jerarquía deliberada: Alto interrumpe, Medio se nota, Bajo se retira.
+     Los tres niveles no deben pesar lo mismo. */
+  --alto-solido: #b3261e;
+  --alto-texto: #b3261e;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --fondo: #14161a;
-    --superficie: #1c1f25;
-    --borde: #2c313a;
-    --texto: #e8eaed;
-    --texto-suave: #9aa3b0;
+  --medio-fondo: #fff4e5;
+  --medio-texto: #8a5200;
+  --medio-borde: #f0dfc0;
 
-    --alto-fondo: #3a1c1c;
-    --alto-texto: #ff9b9b;
-    --medio-fondo: #3a2f18;
-    --medio-texto: #f0c069;
-    --bajo-fondo: #16301f;
-    --bajo-texto: #86d6a1;
+  --bajo-fondo: #f2f5f3;
+  --bajo-texto: #3d6b52;
+  --bajo-borde: #dde6e0;
 
-    --critico: #ff8a80;
-    --grave: #fbbf5a;
-    --moderado: #9aa3b0;
-    --protector: #86d6a1;
+  --critico: #b3261e;
+  --grave: #a66300;
+  --moderado: #6b7684;
+  --protector: #2e6b4a;
 
-    --acento: #7aa2f7;
-    --sombra: none;
-  }
+  --radio: 6px;
+  --sombra: 0 1px 2px rgba(22, 32, 44, 0.05);
 }
 
 * {
@@ -55,48 +46,85 @@ body {
   margin: 0;
   background: var(--fondo);
   color: var(--texto);
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  font-size: 15px;
-  line-height: 1.5;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 14.5px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
 }
 
 .contenedor {
-  max-width: 1100px;
+  max-width: 1080px;
   margin: 0 auto;
-  padding: 24px 20px 64px;
+  padding: 26px 24px 72px;
 }
 
+/* ---------- Cabecera institucional ---------- */
+
 .cabecera {
-  border-bottom: 1px solid var(--borde);
   background: var(--superficie);
+  border-bottom: 1px solid var(--borde);
+  border-top: 3px solid var(--acento);
 }
 .cabecera .contenedor {
-  padding: 18px 20px;
-  display: flex;
-  align-items: baseline;
-  gap: 14px;
-  flex-wrap: wrap;
+  padding: 20px 24px;
 }
 .cabecera h1 {
-  font-size: 17px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 21px;
+  font-weight: 600;
   margin: 0;
-  font-weight: 650;
+  letter-spacing: -0.01em;
 }
 .cabecera p {
-  margin: 0;
+  margin: 3px 0 0;
   color: var(--texto-suave);
   font-size: 13px;
 }
 
+/* ---------- Resumen ---------- */
+
+.resumen {
+  display: flex;
+  gap: 26px;
+  padding: 14px 18px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.resumen-dato {
+  display: flex;
+  flex-direction: column;
+}
+.resumen-cifra {
+  font-size: 21px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+/* Solo el riesgo alto lleva color en el resumen. Colorear las cinco cifras
+   las igualaba y ninguna destacaba. */
+.resumen-cifra.alto {
+  color: var(--alto-texto);
+}
+.resumen-etiqueta {
+  font-size: 12px;
+  color: var(--texto-suave);
+  font-weight: 500;
+}
+
+/* ---------- Filtros ---------- */
+
 .filtros {
   display: flex;
-  gap: 10px;
+  gap: 9px;
   flex-wrap: wrap;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 .filtros select,
 .filtros input {
-  padding: 8px 11px;
+  padding: 7px 11px;
   border: 1px solid var(--borde);
   border-radius: var(--radio);
   background: var(--superficie);
@@ -106,85 +134,120 @@ body {
 }
 .filtros input {
   flex: 1;
-  min-width: 190px;
+  min-width: 200px;
 }
+.filtros select:focus,
+.filtros input:focus {
+  outline: 2px solid var(--acento);
+  outline-offset: -1px;
+  border-color: var(--acento);
+}
+
+.conteo {
+  font-size: 13px;
+  color: var(--texto-suave);
+  margin: 0 0 10px;
+}
+
+/* ---------- Fila de caso ---------- */
 
 .caso {
   display: block;
   background: var(--superficie);
   border: 1px solid var(--borde);
   border-radius: var(--radio);
-  padding: 14px 16px;
-  margin-bottom: 10px;
+  padding: 13px 16px;
+  margin-bottom: 7px;
   text-decoration: none;
   color: inherit;
-  box-shadow: var(--sombra);
-  transition: border-color 0.12s;
+  transition: border-color 0.1s, background 0.1s;
 }
 .caso:hover {
-  border-color: var(--acento);
+  background: var(--superficie-alt);
+  border-color: #c8cfd6;
 }
+
 .caso-linea {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: baseline;
+  gap: 9px;
   flex-wrap: wrap;
 }
 .caso-nombre {
-  font-weight: 600;
+  font-weight: 620;
+  font-size: 15px;
 }
 .caso-meta {
   color: var(--texto-suave);
-  font-size: 13px;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
 }
 .caso-motivo {
-  margin-top: 7px;
+  margin-top: 4px;
   font-size: 14px;
+  color: var(--texto-medio);
 }
 .caso-pie {
-  margin-top: 7px;
-  font-size: 12.5px;
+  margin-top: 6px;
+  font-size: 12px;
   color: var(--texto-suave);
   display: flex;
-  gap: 12px;
+  gap: 10px;
+  align-items: center;
   flex-wrap: wrap;
 }
+.caso-pie .separador {
+  color: var(--borde);
+}
+
+/* ---------- Insignias ---------- */
 
 .insignia {
   display: inline-block;
   padding: 2px 9px;
-  border-radius: 999px;
-  font-size: 12px;
+  border-radius: 3px;
+  font-size: 11px;
   font-weight: 650;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
+  border: 1px solid transparent;
+  white-space: nowrap;
 }
+/* Alto: relleno sólido. Es el único que debe interrumpir la lectura. */
 .insignia.alto {
-  background: var(--alto-fondo);
-  color: var(--alto-texto);
+  background: var(--alto-solido);
+  color: #ffffff;
 }
 .insignia.medio {
   background: var(--medio-fondo);
   color: var(--medio-texto);
+  border-color: var(--medio-borde);
 }
+/* Bajo: casi neutro. No compite por atención. */
 .insignia.bajo {
   background: var(--bajo-fondo);
   color: var(--bajo-texto);
+  border-color: var(--bajo-borde);
 }
 .insignia.estado {
   background: transparent;
-  border: 1px solid var(--borde);
+  border-color: transparent;
   color: var(--texto-suave);
   font-weight: 500;
+  padding: 0;
+  letter-spacing: 0;
 }
+
+/* ---------- Factores ---------- */
 
 .factor {
   display: flex;
-  gap: 11px;
-  padding: 11px 0;
-  border-bottom: 1px solid var(--borde);
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--borde-suave);
 }
 .factor:last-child {
   border-bottom: none;
+  padding-bottom: 0;
 }
 .factor-marca {
   width: 3px;
@@ -204,10 +267,9 @@ body {
   background: var(--protector);
 }
 .factor-etiqueta {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: 12px;
+  font-weight: 650;
+  margin-bottom: 1px;
 }
 .factor-etiqueta.critico {
   color: var(--critico);
@@ -223,44 +285,50 @@ body {
 }
 .factor-sugerencia {
   color: var(--texto-suave);
-  font-size: 13.5px;
-  margin-top: 3px;
+  font-size: 13px;
+  margin-top: 2px;
 }
+
+/* ---------- Paneles ---------- */
 
 .panel {
   background: var(--superficie);
   border: 1px solid var(--borde);
   border-radius: var(--radio);
   padding: 18px 20px;
-  margin-bottom: 16px;
-  box-shadow: var(--sombra);
+  margin-bottom: 14px;
 }
 .panel h2 {
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: 12.5px;
   color: var(--texto-suave);
   margin: 0 0 12px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
 }
 
-.barra {
-  display: grid;
-  grid-template-columns: 90px 1fr 52px;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 7px;
+.ficha-nombre {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.ficha-datos {
+  color: var(--texto-medio);
   font-size: 13.5px;
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
 }
-.barra-fondo {
-  background: var(--fondo);
-  border-radius: 999px;
-  height: 7px;
-  overflow: hidden;
+
+.dato-destacado {
+  font-size: 15px;
+  margin: 0;
 }
-.barra-relleno {
-  background: var(--acento);
-  height: 100%;
+.dato-destacado strong {
+  font-weight: 650;
 }
+
+/* ---------- Botones ---------- */
 
 .acciones {
   display: flex;
@@ -268,66 +336,84 @@ body {
   flex-wrap: wrap;
 }
 button {
-  padding: 8px 14px;
+  padding: 7px 14px;
   border: 1px solid var(--borde);
   border-radius: var(--radio);
   background: var(--superficie);
-  color: var(--texto);
-  font-size: 14px;
+  color: var(--texto-medio);
+  font-size: 13.5px;
   font-family: inherit;
+  font-weight: 550;
   cursor: pointer;
+  transition: all 0.1s;
 }
 button:hover:not(:disabled) {
   border-color: var(--acento);
   color: var(--acento);
+  background: var(--acento-claro);
 }
 button:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: default;
 }
-button.activo {
-  background: var(--acento);
-  border-color: var(--acento);
-  color: #fff;
-}
+
+/* ---------- Estados ---------- */
 
 .vacio {
   text-align: center;
-  padding: 56px 20px;
+  padding: 52px 20px;
   color: var(--texto-suave);
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  font-size: 13.5px;
 }
 .vacio strong {
   display: block;
   color: var(--texto);
-  margin-bottom: 6px;
-  font-size: 16px;
+  margin-bottom: 5px;
+  font-size: 15.5px;
+  font-weight: 600;
 }
 .error {
-  border-left: 3px solid var(--critico);
+  border: 1px solid var(--alto-borde);
+  border-left: 3px solid var(--alto-texto);
   background: var(--alto-fondo);
   color: var(--alto-texto);
   padding: 12px 15px;
   border-radius: var(--radio);
+  font-size: 13.5px;
+}
+.aviso-ok {
+  color: var(--protector);
+  font-size: 13px;
+  margin-top: 11px;
 }
 .nota-pie {
   color: var(--texto-suave);
-  font-size: 12.5px;
-  font-style: italic;
-  margin-top: 12px;
+  font-size: 12px;
+  margin-top: 14px;
+  padding-top: 11px;
+  border-top: 1px solid var(--borde-suave);
 }
 .enlace-volver {
   color: var(--acento);
   text-decoration: none;
-  font-size: 14px;
+  font-size: 13.5px;
+  font-weight: 550;
   display: inline-block;
   margin-bottom: 14px;
 }
+.enlace-volver:hover {
+  text-decoration: underline;
+}
+
 .paginacion {
   display: flex;
   gap: 10px;
   align-items: center;
   justify-content: center;
-  margin-top: 18px;
+  margin-top: 20px;
   color: var(--texto-suave);
-  font-size: 14px;
+  font-size: 13.5px;
 }

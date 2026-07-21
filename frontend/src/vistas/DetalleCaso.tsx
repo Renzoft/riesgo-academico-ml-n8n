@@ -3,6 +3,7 @@ import { useActualizarCaso, useExplicacion } from "../api/consultas";
 import type { EstadoCaso } from "../api/tipos";
 import {
   certezaEnPalabras,
+  claseEnEspanol,
   EstadoVacio,
   InsigniaRiesgo,
   LineaFactor,
@@ -14,6 +15,13 @@ const TRANSICIONES: { estado: EstadoCaso; etiqueta: string }[] = [
   { estado: "en_seguimiento", etiqueta: "Poner en seguimiento" },
   { estado: "cerrado", etiqueta: "Cerrar caso" },
 ];
+
+const ETIQUETA_ESTADO: Record<EstadoCaso, string> = {
+  pendiente: "sin atender",
+  contactado: "contactado",
+  en_seguimiento: "en seguimiento",
+  cerrado: "cerrado",
+};
 
 export default function DetalleCaso() {
   const { id } = useParams<{ id: string }>();
@@ -51,41 +59,40 @@ export default function DetalleCaso() {
       </Link>
 
       <div className="panel">
-        <div className="caso-linea">
-          <InsigniaRiesgo nivel={data.nivel_riesgo} />
-          <h2 style={{ margin: 0, fontSize: 19, textTransform: "none", color: "var(--texto)", letterSpacing: 0 }}>
-            {nombre}
-          </h2>
-        </div>
-        <div className="caso-meta" style={{ marginTop: 6 }}>
+        <h1 className="ficha-nombre">{nombre}</h1>
+        <div className="ficha-datos">
           {estudiante.codigo}
           {estudiante.carrera && ` · ${estudiante.carrera}`}
           {estudiante.ciclo && ` · ciclo ${estudiante.ciclo}`}
+          {estudiante.correo && ` · ${estudiante.correo}`}
         </div>
-        {estudiante.correo && (
-          <div className="caso-meta">{estudiante.correo}</div>
-        )}
         {estudiante.nombre_completo === null && (
-          <div className="caso-meta" style={{ marginTop: 8 }}>
+          <div className="ficha-datos">
             Este código no figura en el directorio académico.
           </div>
         )}
       </div>
 
       <div className="panel">
-        <h2>Predicción del modelo</h2>
-        <p style={{ margin: "0 0 14px" }}>
-          Estado previsto: <strong>{data.estado_predicho}</strong> ·{" "}
-          {certezaEnPalabras(data.confianza)} (
-          {(data.confianza * 100).toFixed(1)}%)
+        <h2>Evaluación del modelo</h2>
+        <div className="caso-linea" style={{ marginBottom: 8 }}>
+          <InsigniaRiesgo nivel={data.nivel_riesgo} />
+          <span className="caso-meta">
+            {certezaEnPalabras(data.confianza)} ·{" "}
+            {(data.confianza * 100).toFixed(1)}%
+          </span>
+        </div>
+        <p className="dato-destacado">
+          Desenlace previsto:{" "}
+          <strong>{claseEnEspanol(data.estado_predicho)}</strong>
         </p>
       </div>
 
       <div className="panel">
-        <h2>Por qué aparece este caso</h2>
+        <h2>Factores observados</h2>
 
         {data.factores_riesgo.length === 0 && (
-          <p style={{ margin: 0 }}>
+          <p style={{ margin: 0, color: "var(--texto-medio)" }}>
             No se identificaron factores de riesgo entre las variables
             observadas.
           </p>
@@ -97,14 +104,12 @@ export default function DetalleCaso() {
 
         {data.factores_protectores.length > 0 && (
           <>
-            <h2 style={{ marginTop: 20 }}>Factores protectores</h2>
+            <h2 style={{ marginTop: 22 }}>Factores protectores</h2>
             {data.factores_protectores.map((factor) => (
               <LineaFactor key={factor.codigo} factor={factor} />
             ))}
           </>
         )}
-
-        <p className="nota-pie">{data.nota}</p>
       </div>
 
       <div className="panel">
@@ -124,9 +129,9 @@ export default function DetalleCaso() {
         </div>
 
         {actualizar.isSuccess && (
-          <p className="caso-meta" style={{ marginTop: 12 }}>
-            Caso actualizado a{" "}
-            <strong>{actualizar.data.estado.replace("_", " ")}</strong>.
+          <p className="aviso-ok">
+            Caso registrado como{" "}
+            <strong>{ETIQUETA_ESTADO[actualizar.data.estado]}</strong>.
           </p>
         )}
         {actualizar.isError && (
