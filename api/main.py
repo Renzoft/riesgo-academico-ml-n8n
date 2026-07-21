@@ -824,6 +824,7 @@ def listar_estudiantes(
             SELECT p.id AS prediction_id, p.student_id, p.email_tutor,
                    p.estado_predicho, p.nivel_riesgo, p.confianza,
                    p.created_at, p.model_release, p.mlflow_run_id,
+                   p.input_features,
                    COALESCE(c.estado, 'pendiente') AS estado_caso,
                    c.responsable, c.nota, c.updated_at AS caso_actualizado
             {base}
@@ -834,6 +835,25 @@ def listar_estudiantes(
         ).fetchall()
 
         registros = [dict(fila) for fila in filas]
+
+        # El factor principal se calcula aqui, sobre datos ya traidos, para
+        # que la bandeja pueda mostrar el motivo sin una peticion por fila.
+        for registro in registros:
+            crudas = registro.pop("input_features", None)
+            registro["factor_principal"] = None
+            registro["total_factores_riesgo"] = 0
+            if crudas:
+                explicacion = explicar_estudiante(json.loads(crudas))
+                registro["total_factores_riesgo"] = (
+                    explicacion["total_factores_riesgo"]
+                )
+                if explicacion["factores_riesgo"]:
+                    principal = explicacion["factores_riesgo"][0]
+                    registro["factor_principal"] = {
+                        "mensaje": principal["mensaje"],
+                        "severidad": principal["severidad"],
+                    }
+
         # El nombre se resuelve al mostrar, no se guarda con la prediccion.
         enriquecer(
             registros,

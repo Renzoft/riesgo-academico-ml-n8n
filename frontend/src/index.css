@@ -1,0 +1,333 @@
+:root {
+  --fondo: #f7f8fa;
+  --superficie: #ffffff;
+  --borde: #e2e5ea;
+  --texto: #1a1d23;
+  --texto-suave: #616a76;
+
+  --alto-fondo: #fdecec;
+  --alto-texto: #a01b1b;
+  --medio-fondo: #fdf3e0;
+  --medio-texto: #8a5a04;
+  --bajo-fondo: #e9f5ec;
+  --bajo-texto: #1f6b38;
+
+  --critico: #c62828;
+  --grave: #b45309;
+  --moderado: #6b7280;
+  --protector: #1f6b38;
+
+  --acento: #2557b8;
+  --radio: 10px;
+  --sombra: 0 1px 2px rgba(16, 24, 40, 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #14161a;
+    --superficie: #1c1f25;
+    --borde: #2c313a;
+    --texto: #e8eaed;
+    --texto-suave: #9aa3b0;
+
+    --alto-fondo: #3a1c1c;
+    --alto-texto: #ff9b9b;
+    --medio-fondo: #3a2f18;
+    --medio-texto: #f0c069;
+    --bajo-fondo: #16301f;
+    --bajo-texto: #86d6a1;
+
+    --critico: #ff8a80;
+    --grave: #fbbf5a;
+    --moderado: #9aa3b0;
+    --protector: #86d6a1;
+
+    --acento: #7aa2f7;
+    --sombra: none;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.contenedor {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 20px 64px;
+}
+
+.cabecera {
+  border-bottom: 1px solid var(--borde);
+  background: var(--superficie);
+}
+.cabecera .contenedor {
+  padding: 18px 20px;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.cabecera h1 {
+  font-size: 17px;
+  margin: 0;
+  font-weight: 650;
+}
+.cabecera p {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: 13px;
+}
+
+.filtros {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.filtros select,
+.filtros input {
+  padding: 8px 11px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  color: var(--texto);
+  font-size: 14px;
+  font-family: inherit;
+}
+.filtros input {
+  flex: 1;
+  min-width: 190px;
+}
+
+.caso {
+  display: block;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: var(--sombra);
+  transition: border-color 0.12s;
+}
+.caso:hover {
+  border-color: var(--acento);
+}
+.caso-linea {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.caso-nombre {
+  font-weight: 600;
+}
+.caso-meta {
+  color: var(--texto-suave);
+  font-size: 13px;
+}
+.caso-motivo {
+  margin-top: 7px;
+  font-size: 14px;
+}
+.caso-pie {
+  margin-top: 7px;
+  font-size: 12.5px;
+  color: var(--texto-suave);
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.insignia {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+.insignia.alto {
+  background: var(--alto-fondo);
+  color: var(--alto-texto);
+}
+.insignia.medio {
+  background: var(--medio-fondo);
+  color: var(--medio-texto);
+}
+.insignia.bajo {
+  background: var(--bajo-fondo);
+  color: var(--bajo-texto);
+}
+.insignia.estado {
+  background: transparent;
+  border: 1px solid var(--borde);
+  color: var(--texto-suave);
+  font-weight: 500;
+}
+
+.factor {
+  display: flex;
+  gap: 11px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--borde);
+}
+.factor:last-child {
+  border-bottom: none;
+}
+.factor-marca {
+  width: 3px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.factor-marca.critico {
+  background: var(--critico);
+}
+.factor-marca.alto {
+  background: var(--grave);
+}
+.factor-marca.medio {
+  background: var(--moderado);
+}
+.factor-marca.protector {
+  background: var(--protector);
+}
+.factor-etiqueta {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.factor-etiqueta.critico {
+  color: var(--critico);
+}
+.factor-etiqueta.alto {
+  color: var(--grave);
+}
+.factor-etiqueta.medio {
+  color: var(--moderado);
+}
+.factor-etiqueta.protector {
+  color: var(--protector);
+}
+.factor-sugerencia {
+  color: var(--texto-suave);
+  font-size: 13.5px;
+  margin-top: 3px;
+}
+
+.panel {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  box-shadow: var(--sombra);
+}
+.panel h2 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--texto-suave);
+  margin: 0 0 12px;
+}
+
+.barra {
+  display: grid;
+  grid-template-columns: 90px 1fr 52px;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 7px;
+  font-size: 13.5px;
+}
+.barra-fondo {
+  background: var(--fondo);
+  border-radius: 999px;
+  height: 7px;
+  overflow: hidden;
+}
+.barra-relleno {
+  background: var(--acento);
+  height: 100%;
+}
+
+.acciones {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+button {
+  padding: 8px 14px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  color: var(--texto);
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+}
+button:hover:not(:disabled) {
+  border-color: var(--acento);
+  color: var(--acento);
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+button.activo {
+  background: var(--acento);
+  border-color: var(--acento);
+  color: #fff;
+}
+
+.vacio {
+  text-align: center;
+  padding: 56px 20px;
+  color: var(--texto-suave);
+}
+.vacio strong {
+  display: block;
+  color: var(--texto);
+  margin-bottom: 6px;
+  font-size: 16px;
+}
+.error {
+  border-left: 3px solid var(--critico);
+  background: var(--alto-fondo);
+  color: var(--alto-texto);
+  padding: 12px 15px;
+  border-radius: var(--radio);
+}
+.nota-pie {
+  color: var(--texto-suave);
+  font-size: 12.5px;
+  font-style: italic;
+  margin-top: 12px;
+}
+.enlace-volver {
+  color: var(--acento);
+  text-decoration: none;
+  font-size: 14px;
+  display: inline-block;
+  margin-bottom: 14px;
+}
+.paginacion {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 18px;
+  color: var(--texto-suave);
+  font-size: 14px;
+}
