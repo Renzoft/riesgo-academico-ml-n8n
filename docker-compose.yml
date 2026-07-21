@@ -9,6 +9,11 @@ services:
       SMTP_HOST: mailhog
       SMTP_PORT: 1025
       SENDER_EMAIL: alertas@universidad.local
+      # Origenes autorizados del panel web (servidor de Vite en desarrollo).
+      CORS_ORIGINS: "http://localhost:5173,http://localhost:4173"
+      # Clave de acceso al panel. Vacia deja /panel abierto, util en
+      # desarrollo. En un despliegue real debe definirse siempre.
+      PANEL_API_KEY: "${PANEL_API_KEY:-}"
     volumes:
       - ./models:/app/models:ro
       - ./app_data:/app/app_data
