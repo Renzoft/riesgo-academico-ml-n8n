@@ -18,6 +18,8 @@ services:
       - ./models:/app/models:ro
       - ./app_data:/app/app_data
       - ./dataset.csv:/app/dataset.csv:ro
+      # Directorio que simula al sistema academico institucional.
+      - ./data:/app/data:ro
     depends_on:
       - mailhog
     restart: unless-stopped

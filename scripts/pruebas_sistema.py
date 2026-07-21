@@ -55,6 +55,19 @@ def prepare_dataframe() -> pd.DataFrame:
     return dataframe
 
 
+DIRECTORIO_PATH = Path("data/directorio_estudiantes.csv")
+
+
+def codigos_del_directorio() -> list[str]:
+    """Códigos reales del directorio, para que las pruebas usen estudiantes
+    identificables en el panel en lugar de identificadores sintéticos."""
+    if not DIRECTORIO_PATH.exists():
+        return []
+    return pd.read_csv(DIRECTORIO_PATH, dtype={"codigo": str})[
+        "codigo"
+    ].tolist()
+
+
 def find_payloads_by_predicted_risk(
     dataframe: pd.DataFrame,
 ) -> dict[str, dict]:
@@ -63,6 +76,7 @@ def find_payloads_by_predicted_risk(
     Así se garantiza que las tres ramas de n8n sean ejecutadas.
     """
     found: dict[str, dict] = {}
+    codigos = codigos_del_directorio()
 
     for row_index, row in dataframe.head(1000).iterrows():
         features = (
@@ -71,8 +85,14 @@ def find_payloads_by_predicted_risk(
             .tolist()
         )
 
+        identificador = (
+            codigos[row_index % len(codigos)]
+            if codigos
+            else f"PRUEBA-{row_index}"
+        )
+
         payload = {
-            "student_id": f"PRUEBA-{row_index}",
+            "student_id": identificador,
             "email_tutor": "tutor@universidad.local",
             "prediction_source": "system_test",
             "features": features,

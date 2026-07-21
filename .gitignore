@@ -6,6 +6,9 @@ venv/
 # Datos locales
 dataset.csv
 *.csv
+# El directorio simulado del sistema academico si se versiona: son datos
+# ficticios de referencia, pequenos y necesarios para levantar el panel.
+!data/directorio_estudiantes.csv
 
 # Python
 __pycache__/

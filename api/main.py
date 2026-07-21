@@ -16,6 +16,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from api.schemas import FEATURE_FIELD_MAP, StudentFeatures
+from core.directorio import (
+    buscar_por_codigos,
+    cargar_directorio,
+    enriquecer,
+)
 from core.explicabilidad import explicar_estudiante
 from infrastructure.model_release import (
     load_active_release,
@@ -311,6 +316,14 @@ def load_artifacts() -> None:
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     initialize_database()
+
+    # Carga el directorio simulado del sistema academico.
+    try:
+        with get_connection() as connection:
+            total = cargar_directorio(connection)
+        print(f"[+] Directorio de estudiantes: {total} registros.")
+    except Exception as error:
+        print(f"[-] No se pudo cargar el directorio: {error}")
 
     try:
         load_artifacts()
@@ -820,12 +833,22 @@ def listar_estudiantes(
             parametros + [por_pagina, (pagina - 1) * por_pagina],
         ).fetchall()
 
+        registros = [dict(fila) for fila in filas]
+        # El nombre se resuelve al mostrar, no se guarda con la prediccion.
+        enriquecer(
+            registros,
+            buscar_por_codigos(
+                connection,
+                [r["student_id"] for r in registros],
+            ),
+        )
+
     return {
         "total": total,
         "pagina": pagina,
         "por_pagina": por_pagina,
         "paginas": (total + por_pagina - 1) // por_pagina,
-        "estudiantes": [dict(fila) for fila in filas],
+        "estudiantes": registros,
     }
 
 
@@ -917,6 +940,12 @@ def explicar_prediccion(prediction_id: int):
             (prediction_id,),
         ).fetchone()
 
+        datos_estudiante = {}
+        if fila is not None:
+            datos_estudiante = buscar_por_codigos(
+                connection, [fila["student_id"]]
+            )
+
     if fila is None:
         raise HTTPException(
             status_code=404,
@@ -934,7 +963,7 @@ def explicar_prediccion(prediction_id: int):
         )
 
     explicacion = explicar_estudiante(json.loads(crudas))
-    return {
+    resultado = {
         "prediction_id": prediction_id,
         "student_id": fila["student_id"],
         "estado_predicho": fila["estado_predicho"],
@@ -942,6 +971,8 @@ def explicar_prediccion(prediction_id: int):
         "confianza": fila["confianza"],
         **explicacion,
     }
+    enriquecer([resultado], datos_estudiante)
+    return resultado
 
 
 def actualizar_caso(prediction_id: int, cambio: CaseUpdate):
