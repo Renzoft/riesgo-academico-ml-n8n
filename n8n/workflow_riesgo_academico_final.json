@@ -1,0 +1,324 @@
+{
+  "name": "Riesgo Académico - Flujo Completo",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "riesgo-academico",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "0221a122-7bb4-41db-8f73-fa7207bc43c8",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -608,
+        144
+      ],
+      "webhookId": "197e4d9d-d336-48c2-a857-ce5379279952"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/predict",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($json.body) }}",
+        "options": {}
+      },
+      "id": "e0dc6d55-7f88-420c-8b4b-ed1401337bd8",
+      "name": "Predecir riesgo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -368,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.nivel_riesgo }}",
+                    "rightValue": "Alto",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Alto"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.nivel_riesgo }}",
+                    "rightValue": "Medio",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Medio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.nivel_riesgo }}",
+                    "rightValue": "Bajo",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Bajo"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8a49ffe2-7e15-4fd3-a0fe-4f789cb451f0",
+      "name": "Evaluar nivel de riesgo",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -128,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/actions/execute",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ prediction_id: $json.prediction_id, student_id: $json.student_id, email_tutor: $('Webhook').item.json.body.email_tutor || 'tutor@universidad.local', estado_predicho: $json.estado_predicho, nivel_riesgo: $json.nivel_riesgo, confianza: $json.confianza, accion: 'alerta_correo' }) }}",
+        "options": {}
+      },
+      "id": "425b6a93-8eab-4bc8-8aaa-0b812e2dbc8a",
+      "name": "Enviar alerta local",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        160,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/actions/execute",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ prediction_id: $json.prediction_id, student_id: $json.student_id, email_tutor: $('Webhook').item.json.body.email_tutor || 'tutor@universidad.local', estado_predicho: $json.estado_predicho, nivel_riesgo: $json.nivel_riesgo, confianza: $json.confianza, accion: 'programar_seguimiento' }) }}",
+        "options": {}
+      },
+      "id": "ea93f148-a001-4e26-8b92-480d32e7958d",
+      "name": "Programar seguimiento",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        160,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/actions/execute",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ prediction_id: $json.prediction_id, student_id: $json.student_id, email_tutor: $('Webhook').item.json.body.email_tutor || 'tutor@universidad.local', estado_predicho: $json.estado_predicho, nivel_riesgo: $json.nivel_riesgo, confianza: $json.confianza, accion: 'registrar_exito' }) }}",
+        "options": {}
+      },
+      "id": "6cb80a26-0823-474b-a46a-87060633191c",
+      "name": "Registrar riesgo bajo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        160,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "074e9eec-d88c-4b07-9ec6-eeccd4608315",
+      "name": "Responder alto",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        432,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "6406792d-fabb-465a-9dea-00158c153e05",
+      "name": "Responder medio",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        432,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "5f9a714f-8a3a-4434-806f-7b4310f4be0f",
+      "name": "Responder bajo",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        432,
+        320
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Predecir riesgo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Predecir riesgo": {
+      "main": [
+        [
+          {
+            "node": "Evaluar nivel de riesgo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluar nivel de riesgo": {
+      "main": [
+        [
+          {
+            "node": "Enviar alerta local",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Programar seguimiento",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar riesgo bajo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar alerta local": {
+      "main": [
+        [
+          {
+            "node": "Responder alto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Programar seguimiento": {
+      "main": [
+        [
+          {
+            "node": "Responder medio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar riesgo bajo": {
+      "main": [
+        [
+          {
+            "node": "Responder bajo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9bce3dfe-e1bf-453b-a556-7c0bd5a6934c",
+  "meta": {
+    "instanceId": "081bb53ccbf6988958cd09ba16201fe964cbaad44d124b20d59d4eab4613ed68"
+  },
+  "nodeGroups": [],
+  "id": "rmUGJlJIK5nzZ9Mw",
+  "tags": []
+}

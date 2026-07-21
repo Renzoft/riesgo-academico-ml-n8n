@@ -2,17 +2,22 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Copiamos primero el requirements.txt para aprovechar la caché de Docker
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libgomp1 curl \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
+RUN python -m pip install --no-cache-dir --upgrade pip \
+    && python -m pip install --no-cache-dir -r requirements.txt
 
-# Instalamos las dependencias
-RUN pip install --no-cache-dir -r requirements.txt
+COPY api.py .
+COPY models ./models
 
-# Copiamos el resto del código y los modelos
-COPY . .
+RUN mkdir -p /app/app_data
 
-# Exponemos el puerto de FastAPI
 EXPOSE 8000
 
-# Comando para ejecutar la API
-CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+CMD ["python", "-m", "uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]

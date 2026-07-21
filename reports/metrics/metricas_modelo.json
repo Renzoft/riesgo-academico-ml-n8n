@@ -1,0 +1,47 @@
+{
+  "test_loss": 0.5515697598457336,
+  "test_accuracy": 0.7635542154312134,
+  "macro_precision": 0.735865017841762,
+  "macro_recall": 0.7318555340932432,
+  "macro_f1": 0.7238979783900196,
+  "weighted_f1": 0.7743085398792071,
+  "epochs_executed": 29,
+  "classes": [
+    "Dropout",
+    "Enrolled",
+    "Graduate"
+  ],
+  "classification_report": {
+    "Dropout": {
+      "precision": 0.8988095238095238,
+      "recall": 0.705607476635514,
+      "f1-score": 0.7905759162303665,
+      "support": 214.0
+    },
+    "Enrolled": {
+      "precision": 0.4476744186046512,
+      "recall": 0.6470588235294118,
+      "f1-score": 0.5292096219931272,
+      "support": 119.0
+    },
+    "Graduate": {
+      "precision": 0.8611111111111112,
+      "recall": 0.8429003021148036,
+      "f1-score": 0.8519083969465648,
+      "support": 331.0
+    },
+    "accuracy": 0.7635542168674698,
+    "macro avg": {
+      "precision": 0.735865017841762,
+      "recall": 0.7318555340932432,
+      "f1-score": 0.7238979783900196,
+      "support": 664.0
+    },
+    "weighted avg": {
+      "precision": 0.799166071817725,
+      "recall": 0.7635542168674698,
+      "f1-score": 0.7743085398792071,
+      "support": 664.0
+    }
+  }
+}
