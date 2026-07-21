@@ -1,0 +1,49 @@
+{
+  "active": {
+    "source": "reports\\metrics\\metricas_modelo.json",
+    "run_id": null,
+    "accuracy": 0.7635542154312134,
+    "macro_f1": 0.7238979783900196,
+    "weighted_f1": 0.7743085398792071,
+    "dropout_recall": 0.705607476635514,
+    "enrolled_f1": 0.5292096219931272,
+    "graduate_f1": 0.8519083969465648,
+    "dataset_sha256": null
+  },
+  "best_candidate": {
+    "source": "models\\releases\\preprocessing-v2-97984f56\\metrics.json",
+    "run_id": null,
+    "accuracy": 0.7786144614219666,
+    "macro_f1": 0.7357779333261272,
+    "weighted_f1": 0.7847784686085391,
+    "dropout_recall": 0.705607476635514,
+    "enrolled_f1": 0.5474452554744526,
+    "graduate_f1": 0.8609467455621301,
+    "dataset_sha256": null
+  },
+  "deltas": {
+    "accuracy": 0.015060245990753174,
+    "macro_f1": 0.011879954936107606,
+    "weighted_f1": 0.010469928729331945,
+    "dropout_recall": 0.0,
+    "enrolled_f1": 0.018235633481325397,
+    "graduate_f1": 0.009038348615565295
+  },
+  "promotion_eligible": true,
+  "decision": "Candidato apto para validación funcional; no promovido.",
+  "equivalent_candidate_groups": [
+    [
+      {
+        "source": "models\\releases\\preprocessing-v2-97984f56\\metrics.json",
+        "run_id": null,
+        "accuracy": 0.7786144614219666,
+        "macro_f1": 0.7357779333261272,
+        "weighted_f1": 0.7847784686085391,
+        "dropout_recall": 0.705607476635514,
+        "enrolled_f1": 0.5474452554744526,
+        "graduate_f1": 0.8609467455621301,
+        "dataset_sha256": null
+      }
+    ]
+  ]
+}

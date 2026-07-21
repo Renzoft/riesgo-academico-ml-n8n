@@ -9,9 +9,17 @@ services:
       SMTP_HOST: mailhog
       SMTP_PORT: 1025
       SENDER_EMAIL: alertas@universidad.local
+      # Origenes autorizados del panel web (servidor de Vite en desarrollo).
+      CORS_ORIGINS: "http://localhost:5173,http://localhost:4173"
+      # Clave de acceso al panel. Vacia deja /panel abierto, util en
+      # desarrollo. En un despliegue real debe definirse siempre.
+      PANEL_API_KEY: "${PANEL_API_KEY:-}"
     volumes:
       - ./models:/app/models:ro
       - ./app_data:/app/app_data
+      - ./dataset.csv:/app/dataset.csv:ro
+      # Directorio que simula al sistema academico institucional.
+      - ./data:/app/data:ro
     depends_on:
       - mailhog
     restart: unless-stopped
@@ -42,6 +50,33 @@ services:
     ports:
       - "1025:1025"
       - "8025:8025"
+    restart: unless-stopped
+
+  # Servidor de seguimiento de experimentos. Reutiliza la imagen de la API para
+  # garantizar que la version de MLflow sea la misma que genero mlflow.db.
+  # Se publica en 5001 porque en macOS el puerto 5000 lo ocupa AirPlay.
+  mlflow:
+    build: .
+    container_name: mlflow_tracking
+    ports:
+      - "5001:5000"
+    working_dir: /work
+    volumes:
+      - ./mlflow.db:/work/mlflow.db
+      - ./mlruns:/work/mlruns
+    command: >
+      mlflow server
+      --backend-store-uri sqlite:///mlflow.db
+      --default-artifact-root /work/mlruns
+      --host 0.0.0.0
+      --port 5000
+    # Sobrescribe el HEALTHCHECK heredado del Dockerfile, que apunta al 8000.
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 40s
+      retries: 3
     restart: unless-stopped
 
 volumes:

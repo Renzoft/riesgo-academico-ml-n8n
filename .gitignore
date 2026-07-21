@@ -6,6 +6,9 @@ venv/
 # Datos locales
 dataset.csv
 *.csv
+# El directorio simulado del sistema academico si se versiona: son datos
+# ficticios de referencia, pequenos y necesarios para levantar el panel.
+!data/directorio_estudiantes.csv
 
 # Python
 __pycache__/
@@ -16,6 +19,10 @@ __pycache__/
 models/*.keras
 models/*.h5
 models/*.pkl
+models/candidates/
+# Enlace al run de MLflow: se regenera en cada entrenamiento y apunta a la
+# base local de experimentos, por lo que no es portable entre equipos.
+models/model_run.json
 mlflow.db
 mlruns/
 mlartifacts/
@@ -27,3 +34,4 @@ app_data/
 .env
 .vscode/
 .idea/
+.claude/

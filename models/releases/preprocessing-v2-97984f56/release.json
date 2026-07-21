@@ -1,0 +1,38 @@
+{
+  "release_id": "preprocessing-v2-97984f56",
+  "source_run_id": "97984f5628b8463a98b9ced76189e7cf",
+  "status": "packaged",
+  "created_at_utc": "2026-07-21T17:59:52.713462+00:00",
+  "transformer_type": "column_transformer",
+  "artifacts": {
+    "model": "modelo_estudiantes.keras",
+    "transformer": "preprocessor.pkl",
+    "encoder": "encoder.pkl",
+    "feature_names": "feature_names.json",
+    "metrics": "metrics.json"
+  },
+  "validation": {
+    "compatible": true,
+    "promotion_criteria": {
+      "checks": {
+        "accuracy_not_lower": true,
+        "macro_f1_not_lower": true,
+        "high_risk_recall_not_lower": true
+      },
+      "passed": true
+    },
+    "original_features": 34,
+    "transformed_features": 231,
+    "classes": [
+      "Dropout",
+      "Enrolled",
+      "Graduate"
+    ],
+    "artifact_sha256": {
+      "model": "0903d22f65f6edcc7de674e9388f6da54c8b726772817ac964da34456f1fcb4e",
+      "transformer": "3b6f38e910a2a32a9f7441450b7090a2eb6d87ded757bd58a16834d240c047f7",
+      "encoder": "fdc305587822874ca1f6bd0c04415480c0d42410d4ecf27f09685fc07e161d48",
+      "feature_names": "f8405ff942c623de12b790092f622500fd8c212aac64adad8d93a50021155262"
+    }
+  }
+}

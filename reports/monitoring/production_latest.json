@@ -1,0 +1,28 @@
+{
+  "source": "production",
+  "sample_count": 0,
+  "inputs_available": 0,
+  "status": "insufficient_data",
+  "minimum_samples": 30,
+  "risk_distribution": {},
+  "reference_risk_distribution": {
+    "Alto": 0.3212025316455696,
+    "Bajo": 0.4993218806509946,
+    "Medio": 0.1794755877034358
+  },
+  "risk_distribution_total_variation": null,
+  "confidence": {
+    "mean": null,
+    "below_60_percent": 0
+  },
+  "model_releases": {},
+  "drift": {},
+  "alerts": [],
+  "alerts_suppressed_until_minimum_samples": 0,
+  "outcomes": {
+    "registered": 0,
+    "matched_students": 0,
+    "coverage": 0.0,
+    "accuracy": null
+  }
+}

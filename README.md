@@ -1,5 +1,11 @@
 # Sistema Inteligente para la Detección Temprana de Estudiantes con Riesgo de Abandono Académico
 
+La organización interna del proyecto se describe en
+[`docs/ARQUITECTURA.md`](docs/ARQUITECTURA.md). La API vive en el paquete
+`api/`; los comandos `preparacion_datos.py`, `entrenamiento_modelo.py` y
+`pruebas_sistema.py` se mantienen como fachadas compatibles sin duplicar
+lógica.
+
 Este repositorio contiene el código fuente, modelos, pruebas y flujos del proyecto final del curso **Software Inteligente (2026-I)** de la Universidad Nacional Mayor de San Marcos (UNMSM).
 
 El objetivo principal del sistema es identificar oportunamente a los estudiantes con mayor probabilidad de abandonar sus estudios o no culminarlos exitosamente. A partir de esta predicción, el sistema automatiza acciones de seguimiento y alertas tempranas vía correo electrónico para que los tutores o coordinadores académicos puedan intervenir de forma inmediata.

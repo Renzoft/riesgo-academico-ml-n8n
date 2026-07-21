@@ -1,0 +1,419 @@
+/* Panel académico. Tema claro fijo: se usa en entornos institucionales y en
+   proyección durante la exposición, donde el fondo oscuro se lee peor. */
+
+:root {
+  --fondo: #f4f5f7;
+  --superficie: #ffffff;
+  --superficie-alt: #fafbfc;
+  --borde: #dfe3e8;
+  --borde-suave: #edeff2;
+
+  --texto: #16202c;
+  --texto-medio: #46525f;
+  --texto-suave: #6b7684;
+
+  /* Granate institucional */
+  --acento: #7b1e28;
+  --acento-claro: #f6ecee;
+
+  /* Jerarquía deliberada: Alto interrumpe, Medio se nota, Bajo se retira.
+     Los tres niveles no deben pesar lo mismo. */
+  --alto-solido: #b3261e;
+  --alto-texto: #b3261e;
+
+  --medio-fondo: #fff4e5;
+  --medio-texto: #8a5200;
+  --medio-borde: #f0dfc0;
+
+  --bajo-fondo: #f2f5f3;
+  --bajo-texto: #3d6b52;
+  --bajo-borde: #dde6e0;
+
+  --critico: #b3261e;
+  --grave: #a66300;
+  --moderado: #6b7684;
+  --protector: #2e6b4a;
+
+  --radio: 6px;
+  --sombra: 0 1px 2px rgba(22, 32, 44, 0.05);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 14.5px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.contenedor {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 26px 24px 72px;
+}
+
+/* ---------- Cabecera institucional ---------- */
+
+.cabecera {
+  background: var(--superficie);
+  border-bottom: 1px solid var(--borde);
+  border-top: 3px solid var(--acento);
+}
+.cabecera .contenedor {
+  padding: 20px 24px;
+}
+.cabecera h1 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 21px;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.cabecera p {
+  margin: 3px 0 0;
+  color: var(--texto-suave);
+  font-size: 13px;
+}
+
+/* ---------- Resumen ---------- */
+
+.resumen {
+  display: flex;
+  gap: 26px;
+  padding: 14px 18px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.resumen-dato {
+  display: flex;
+  flex-direction: column;
+}
+.resumen-cifra {
+  font-size: 21px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+/* Solo el riesgo alto lleva color en el resumen. Colorear las cinco cifras
+   las igualaba y ninguna destacaba. */
+.resumen-cifra.alto {
+  color: var(--alto-texto);
+}
+.resumen-etiqueta {
+  font-size: 12px;
+  color: var(--texto-suave);
+  font-weight: 500;
+}
+
+/* ---------- Filtros ---------- */
+
+.filtros {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.filtros select,
+.filtros input {
+  padding: 7px 11px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  color: var(--texto);
+  font-size: 14px;
+  font-family: inherit;
+}
+.filtros input {
+  flex: 1;
+  min-width: 200px;
+}
+.filtros select:focus,
+.filtros input:focus {
+  outline: 2px solid var(--acento);
+  outline-offset: -1px;
+  border-color: var(--acento);
+}
+
+.conteo {
+  font-size: 13px;
+  color: var(--texto-suave);
+  margin: 0 0 10px;
+}
+
+/* ---------- Fila de caso ---------- */
+
+.caso {
+  display: block;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 13px 16px;
+  margin-bottom: 7px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.1s, background 0.1s;
+}
+.caso:hover {
+  background: var(--superficie-alt);
+  border-color: #c8cfd6;
+}
+
+.caso-linea {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+.caso-nombre {
+  font-weight: 620;
+  font-size: 15px;
+}
+.caso-meta {
+  color: var(--texto-suave);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+.caso-motivo {
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--texto-medio);
+}
+.caso-pie {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--texto-suave);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.caso-pie .separador {
+  color: var(--borde);
+}
+
+/* ---------- Insignias ---------- */
+
+.insignia {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+/* Alto: relleno sólido. Es el único que debe interrumpir la lectura. */
+.insignia.alto {
+  background: var(--alto-solido);
+  color: #ffffff;
+}
+.insignia.medio {
+  background: var(--medio-fondo);
+  color: var(--medio-texto);
+  border-color: var(--medio-borde);
+}
+/* Bajo: casi neutro. No compite por atención. */
+.insignia.bajo {
+  background: var(--bajo-fondo);
+  color: var(--bajo-texto);
+  border-color: var(--bajo-borde);
+}
+.insignia.estado {
+  background: transparent;
+  border-color: transparent;
+  color: var(--texto-suave);
+  font-weight: 500;
+  padding: 0;
+  letter-spacing: 0;
+}
+
+/* ---------- Factores ---------- */
+
+.factor {
+  display: flex;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--borde-suave);
+}
+.factor:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.factor-marca {
+  width: 3px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.factor-marca.critico {
+  background: var(--critico);
+}
+.factor-marca.alto {
+  background: var(--grave);
+}
+.factor-marca.medio {
+  background: var(--moderado);
+}
+.factor-marca.protector {
+  background: var(--protector);
+}
+.factor-etiqueta {
+  font-size: 12px;
+  font-weight: 650;
+  margin-bottom: 1px;
+}
+.factor-etiqueta.critico {
+  color: var(--critico);
+}
+.factor-etiqueta.alto {
+  color: var(--grave);
+}
+.factor-etiqueta.medio {
+  color: var(--moderado);
+}
+.factor-etiqueta.protector {
+  color: var(--protector);
+}
+.factor-sugerencia {
+  color: var(--texto-suave);
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+/* ---------- Paneles ---------- */
+
+.panel {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 18px 20px;
+  margin-bottom: 14px;
+}
+.panel h2 {
+  font-size: 12.5px;
+  color: var(--texto-suave);
+  margin: 0 0 12px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+
+.ficha-nombre {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.ficha-datos {
+  color: var(--texto-medio);
+  font-size: 13.5px;
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.dato-destacado {
+  font-size: 15px;
+  margin: 0;
+}
+.dato-destacado strong {
+  font-weight: 650;
+}
+
+/* ---------- Botones ---------- */
+
+.acciones {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+button {
+  padding: 7px 14px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  color: var(--texto-medio);
+  font-size: 13.5px;
+  font-family: inherit;
+  font-weight: 550;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+button:hover:not(:disabled) {
+  border-color: var(--acento);
+  color: var(--acento);
+  background: var(--acento-claro);
+}
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* ---------- Estados ---------- */
+
+.vacio {
+  text-align: center;
+  padding: 52px 20px;
+  color: var(--texto-suave);
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  font-size: 13.5px;
+}
+.vacio strong {
+  display: block;
+  color: var(--texto);
+  margin-bottom: 5px;
+  font-size: 15.5px;
+  font-weight: 600;
+}
+.error {
+  border: 1px solid var(--alto-borde);
+  border-left: 3px solid var(--alto-texto);
+  background: var(--alto-fondo);
+  color: var(--alto-texto);
+  padding: 12px 15px;
+  border-radius: var(--radio);
+  font-size: 13.5px;
+}
+.aviso-ok {
+  color: var(--protector);
+  font-size: 13px;
+  margin-top: 11px;
+}
+.nota-pie {
+  color: var(--texto-suave);
+  font-size: 12px;
+  margin-top: 14px;
+  padding-top: 11px;
+  border-top: 1px solid var(--borde-suave);
+}
+.enlace-volver {
+  color: var(--acento);
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 550;
+  display: inline-block;
+  margin-bottom: 14px;
+}
+.enlace-volver:hover {
+  text-decoration: underline;
+}
+
+.paginacion {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+  color: var(--texto-suave);
+  font-size: 13.5px;
+}

@@ -35,7 +35,11 @@
       "position": [
         -480,
         0
-      ]
+      ],
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000
     },
     {
       "parameters": {
@@ -57,12 +61,51 @@
                       "type": "string",
                       "operation": "equals"
                     }
+                  },
+                  {
+                    "leftValue": "={{ $json.confianza }}",
+                    "rightValue": 0.6,
+                    "operator": {
+                      "type": "number",
+                      "operation": "gte"
+                    }
                   }
                 ],
                 "combinator": "and"
               },
               "renameOutput": true,
               "outputKey": "Alto"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.nivel_riesgo }}",
+                    "rightValue": "Alto",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  },
+                  {
+                    "leftValue": "={{ $json.confianza }}",
+                    "rightValue": 0.6,
+                    "operator": {
+                      "type": "number",
+                      "operation": "lt"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Revision"
             },
             {
               "conditions": {
@@ -112,7 +155,10 @@
             }
           ]
         },
-        "options": {}
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "Sin clasificar"
+        }
       },
       "id": "7506723c-f5d3-4c8f-bf28-26fd7a85a231",
       "name": "Evaluar nivel de riesgo",
@@ -140,7 +186,11 @@
       "position": [
         40,
         -180
-      ]
+      ],
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000
     },
     {
       "parameters": {
@@ -159,7 +209,11 @@
       "position": [
         40,
         0
-      ]
+      ],
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000
     },
     {
       "parameters": {
@@ -178,7 +232,11 @@
       "position": [
         40,
         180
-      ]
+      ],
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000
     },
     {
       "parameters": {
@@ -224,6 +282,74 @@
         300,
         180
       ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://api_inteligente:8000/actions/execute",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ prediction_id: $json.prediction_id, student_id: $json.student_id, email_tutor: $('Webhook').item.json.body.email_tutor || 'tutor@universidad.local', estado_predicho: $json.estado_predicho, nivel_riesgo: $json.nivel_riesgo, confianza: $json.confianza, accion: 'revision_manual' }) }}",
+        "options": {}
+      },
+      "id": "rev-manual-0001",
+      "name": "Derivar a revisión manual",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        560
+      ],
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "resp-rev-0001",
+      "name": "Responder revisión",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        880,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ JSON.stringify({ status: 'sin_clasificar', mensaje: 'El nivel de riesgo no coincide con ninguna regla definida.', recibido: $json }) }}",
+        "options": {}
+      },
+      "id": "resp-sin-0001",
+      "name": "Responder sin clasificar",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        880,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ JSON.stringify({ status: 'error', mensaje: 'El servicio de predicción no está disponible.' }) }}",
+        "options": {}
+      },
+      "id": "resp-err-0001",
+      "name": "Responder error API",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        660,
+        1040
+      ]
     }
   ],
   "pinData": {},
@@ -247,6 +373,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "Responder error API",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -255,6 +388,13 @@
         [
           {
             "node": "Enviar alerta local",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Derivar a revisión manual",
             "type": "main",
             "index": 0
           }
@@ -272,6 +412,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "Responder sin clasificar",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -280,6 +427,13 @@
         [
           {
             "node": "Responder alto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder error API",
             "type": "main",
             "index": 0
           }
@@ -294,6 +448,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "Responder error API",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -302,6 +463,31 @@
         [
           {
             "node": "Responder bajo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder error API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Derivar a revisión manual": {
+      "main": [
+        [
+          {
+            "node": "Responder revisión",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder error API",
             "type": "main",
             "index": 0
           }
